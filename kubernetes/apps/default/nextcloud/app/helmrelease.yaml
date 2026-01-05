@@ -5,22 +5,86 @@ metadata:
   name: nextcloud
 spec:
   interval: 1h
-  chartRef:
-    kind: OCIRepository
-    name: nextcloud
+  chart:
+    spec:
+      chart: nextcloud
+      version: 6.6.3
+      sourceRef:
+        kind: HelmRepository
+        name: nextcloud
   values:
     image:
-      registry: docker.io
-      repository: bitnami/nextcloud
-      tag: 30.0.4-debian-12-r0
+      repository: nextcloud
+      tag: 30.0.4-apache
 
-    nextcloudHost: nextcloud.gurzil.org
-    nextcloudUsername: admin
+    nextcloud:
+      host: nextcloud.gurzil.org
+      existingSecret:
+        enabled: true
+        secretName: nextcloud-credentials
+        usernameKey: nextcloud-username
+        passwordKey: nextcloud-password
 
-    # Reference secret for sensitive values
-    existingSecret: nextcloud-credentials
+      extraEnv:
+        - name: OIDC_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-oidc
+              key: OIDC_CLIENT_ID
+        - name: OIDC_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-oidc
+              key: OIDC_CLIENT_SECRET
+        - name: TRUSTED_PROXIES
+          value: "10.42.0.0/16"
+        - name: OVERWRITEPROTOCOL
+          value: "https"
 
-    # PostgreSQL database
+      configs:
+        oidc.config.php: |-
+          <?php
+          $CONFIG = array(
+            'allow_user_to_change_display_name' => false,
+            'lost_password_link' => 'disabled',
+            'oidc_login_provider_url' => 'https://login.gurzil.org/application/o/nextcloud/',
+            'oidc_login_client_id' => getenv('OIDC_CLIENT_ID'),
+            'oidc_login_client_secret' => getenv('OIDC_CLIENT_SECRET'),
+            'oidc_login_auto_redirect' => false,
+            'oidc_login_end_session_redirect' => true,
+            'oidc_login_button_text' => 'Se connecter avec Authentik',
+            'oidc_login_hide_password_form' => false,
+            'oidc_login_use_id_token' => true,
+            'oidc_login_attributes' => array(
+              'id' => 'preferred_username',
+              'name' => 'name',
+              'mail' => 'email',
+              'groups' => 'groups',
+            ),
+            'oidc_login_default_group' => 'users',
+            'oidc_login_scope' => 'openid profile email',
+            'oidc_login_disable_registration' => false,
+            'oidc_login_tls_verify' => true,
+            'oidc_create_groups' => true,
+          );
+
+    # Internal database (SQLite for simplicity, can change to PostgreSQL later)
+    internalDatabase:
+      enabled: false
+
+    # External PostgreSQL
+    externalDatabase:
+      enabled: true
+      type: postgresql
+      host: nextcloud-postgresql
+      database: nextcloud
+      user: nextcloud
+      existingSecret:
+        enabled: true
+        secretName: nextcloud-db-credentials
+        passwordKey: password
+
+    # PostgreSQL
     postgresql:
       enabled: true
       auth:
@@ -34,7 +98,7 @@ spec:
           enabled: true
           size: 8Gi
 
-    # Redis for caching
+    # Redis
     redis:
       enabled: true
       auth:
@@ -45,64 +109,15 @@ spec:
       enabled: true
       size: 50Gi
 
-    # Ingress disabled - we'll use HTTPRoute
+    # Ingress disabled - using HTTPRoute
     ingress:
       enabled: false
 
-    # Resource limits
+    # Resources
     resources:
       requests:
         cpu: 100m
         memory: 256Mi
       limits:
-        cpu: 1000m
-        memory: 1Gi
-
-    # Extra environment for OIDC
-    extraEnvVars:
-      - name: NEXTCLOUD_TRUSTED_DOMAINS
-        value: "nextcloud.gurzil.org"
-
-    # OIDC Configuration via config file
-    nextcloudConfigs:
-      oidc.config.php: |-
-        <?php
-        $CONFIG = array(
-          'allow_user_to_change_display_name' => false,
-          'lost_password_link' => 'disabled',
-          'oidc_login_provider_url' => 'https://login.gurzil.org/application/o/nextcloud/',
-          'oidc_login_client_id' => getenv('OIDC_CLIENT_ID'),
-          'oidc_login_client_secret' => getenv('OIDC_CLIENT_SECRET'),
-          'oidc_login_auto_redirect' => false,
-          'oidc_login_end_session_redirect' => true,
-          'oidc_login_button_text' => 'Se connecter avec Authentik',
-          'oidc_login_hide_password_form' => false,
-          'oidc_login_use_id_token' => true,
-          'oidc_login_attributes' => array(
-            'id' => 'preferred_username',
-            'name' => 'name',
-            'mail' => 'email',
-            'groups' => 'groups',
-          ),
-          'oidc_login_default_group' => 'users',
-          'oidc_login_use_external_storage' => false,
-          'oidc_login_scope' => 'openid profile email groups',
-          'oidc_login_proxy_ldap' => false,
-          'oidc_login_disable_registration' => false,
-          'oidc_login_redir_fallback' => false,
-          'oidc_login_tls_verify' => true,
-          'oidc_create_groups' => true,
-          'oidc_login_webdav_enabled' => false,
-          'oidc_login_password_authentication' => false,
-          'oidc_login_public_key_caching_time' => 86400,
-          'oidc_login_min_time_between_jwks_requests' => 10,
-          'oidc_login_well_known_caching_time' => 86400,
-          'oidc_login_update_avatar' => false,
-        );
-
-    # Mount OIDC credentials as env vars
-    extraEnvVarsSecret: nextcloud-oidc
-    extraVolumeMounts:
-      - name: oidc-env
-        mountPath: /opt/bitnami/nextcloud/config/oidc.config.php
-        subPath: oidc.config.php
+        cpu: 2000m
+        memory: 2Gi
