@@ -1,50 +1,53 @@
 ---
-clusterName: gurzil-lab
-talosVersion: v1.8.3
-kubernetesVersion: v1.31.1
-endpoint: https://192.168.1.162:6443
+clusterName: kubernetes
 
-domain: lab.gurzil.org
-clusterPodNets:
-  - 10.244.0.0/16
-clusterSvcNets:
-  - 10.245.0.0/16
+talosVersion: "${talosVersion}"
+kubernetesVersion: "${kubernetesVersion}"
 
+endpoint: https://192.168.1.200:6443
+additionalApiServerCertSans: &sans
+  - "127.0.0.1"
+  - "192.168.1.200"
+additionalMachineCertSans: *sans
+
+clusterPodNets: ["10.42.0.0/16"]
+clusterSvcNets: ["10.43.0.0/16"]
+
+# Disable built-in CNI to use Cilium
 cniConfig:
   name: none
 
 nodes:
-  - hostname: gurzil-one
-    ipAddress: 192.168.1.162
+  - hostname: "gurzil-one"
+    ipAddress: "192.168.1.162"
+    installDisk: "/dev/nvme0n1"
+    machineSpec:
+      secureboot: false
+    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
     controlPlane: true
-    installDisk: /dev/sda
     networkInterfaces:
-      - interface: eth0
-        dhcp: true
+      - deviceSelector:
+          hardwareAddr: "a0:ad:9f:b5:a9:28"
+        dhcp: false
+        addresses:
+          - "192.168.1.162/24"
+        routes:
+          - network: "0.0.0.0/0"
+            gateway: "192.168.1.254"
+        mtu: 1500
+        vip:
+          ip: "192.168.1.200"
 
+# Global patches
 patches:
-  - |-
-    machine:
-      kubelet:
-        extraArgs:
-          rotate-server-certificates: "true"
-      time:
-        disabled: false
-        servers:
-          - time.cloudflare.com
-      install:
-        extraKernelArgs:
-          - net.ifnames=0
-    cluster:
-      allowSchedulingOnControlPlanes: true
-      proxy:
-        disabled: true
+  - "@./patches/global/machine-files.yaml"
+  - "@./patches/global/machine-kubelet.yaml"
+  - "@./patches/global/machine-network.yaml"
+  - "@./patches/global/machine-sysctls.yaml"
+  - "@./patches/global/machine-time.yaml"
 
+# Controller patches
 controlPlane:
   patches:
-    - |-
-      cluster:
-        apiServer:
-          certSANs:
-            - 192.168.1.162
-            - lab.gurzil.org
+    - "@./patches/controller/cluster.yaml"
+
