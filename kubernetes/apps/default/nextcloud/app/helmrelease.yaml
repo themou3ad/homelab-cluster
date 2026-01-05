@@ -15,7 +15,7 @@ spec:
   values:
     image:
       repository: nextcloud
-      tag: 30.0.4-apache
+      tag: 30-apache
 
     nextcloud:
       host: nextcloud.gurzil.org
@@ -68,46 +68,27 @@ spec:
             'oidc_create_groups' => true,
           );
 
-    # Internal database (SQLite for simplicity, can change to PostgreSQL later)
+    # Use internal SQLite database for simplicity
     internalDatabase:
+      enabled: true
+
+    # Disable external PostgreSQL for now
+    externalDatabase:
       enabled: false
 
-    # External PostgreSQL
-    externalDatabase:
-      enabled: true
-      type: postgresql
-      host: nextcloud-postgresql
-      database: nextcloud
-      user: nextcloud
-      existingSecret:
-        enabled: true
-        secretName: nextcloud-db-credentials
-        passwordKey: password
-
-    # PostgreSQL
+    # Disable PostgreSQL subchart
     postgresql:
-      enabled: true
-      auth:
-        database: nextcloud
-        username: nextcloud
-        existingSecret: nextcloud-db-credentials
-        secretKeys:
-          userPasswordKey: password
-      primary:
-        persistence:
-          enabled: true
-          size: 8Gi
+      enabled: false
 
-    # Redis
+    # Disable Redis for now
     redis:
-      enabled: true
-      auth:
-        enabled: false
+      enabled: false
 
     # Persistence
     persistence:
       enabled: true
       size: 50Gi
+      storageClass: local-path
 
     # Ingress disabled - using HTTPRoute
     ingress:
