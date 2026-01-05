@@ -7,63 +7,17 @@ spec:
   interval: 1h
   chart:
     spec:
-      chart: democratic-csi
-      version: 0.14.7
+      chart: local-path-provisioner
+      version: 0.0.30
       sourceRef:
         kind: HelmRepository
-        name: democratic-csi
+        name: local-path-provisioner
   values:
-    csiDriver:
-      name: "org.democratic-csi.local-hostpath"
-      storageCapacity: true
-      fsGroupPolicy: File
-
-    storageClasses:
-      - name: local-hostpath
-        defaultClass: true
-        reclaimPolicy: Delete
-        volumeBindingMode: WaitForFirstConsumer
-        allowVolumeExpansion: true
-
-    driver:
-      config:
-        driver: local-hostpath
-        instance_id: gurzil-homelab
-        local-hostpath:
-          shareBasePath: "/var/lib/democratic-csi-local-hostpath"
-          controllerBasePath: "/var/lib/democratic-csi-local-hostpath"
-          dirPermissionsMode: "0770"
-          dirPermissionsUser: 0
-          dirPermissionsGroup: 0
-
-    controller:
-      enabled: true
-      strategy: node
-      externalAttacher:
-        enabled: false
-      externalProvisioner:
-        enabled: true
-        extraArgs:
-          - --leader-election=false
-          - --node-deployment=true
-          - --node-deployment-immediate-binding=false
-          - --feature-gates=Topology=true
-          - --strict-topology=true
-          - --enable-capacity=true
-          - --capacity-ownerref-level=1
-      externalResizer:
-        enabled: false
-      externalSnapshotter:
-        enabled: false
-
-    node:
-      driver:
-        extraVolumeMounts:
-          - name: local-hostpath
-            mountPath: /var/lib/democratic-csi-local-hostpath
-            mountPropagation: Bidirectional
-      extraVolumes:
-        - name: local-hostpath
-          hostPath:
-            path: /var/lib/democratic-csi-local-hostpath
-            type: DirectoryOrCreate
+    storageClass:
+      name: local-path
+      defaultClass: true
+      reclaimPolicy: Delete
+    nodePathMap:
+      - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
+        paths:
+          - /var/local-path-provisioner
