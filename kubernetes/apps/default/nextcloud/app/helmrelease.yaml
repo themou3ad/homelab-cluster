@@ -25,6 +25,12 @@ spec:
         usernameKey: nextcloud-username
         passwordKey: nextcloud-password
 
+      phpConfigs:
+        config.php: |-
+          <?php
+          $CONFIG = array (
+          );
+
       extraEnv:
         - name: OIDC_CLIENT_ID
           valueFrom:
@@ -40,6 +46,8 @@ spec:
           value: "10.42.0.0/16"
         - name: OVERWRITEPROTOCOL
           value: "https"
+        - name: NEXTCLOUD_TRUSTED_DOMAINS
+          value: "localhost nextcloud.gurzil.org 192.168.1.162"
 
       configs:
         oidc.config.php: |-
@@ -68,6 +76,13 @@ spec:
             'oidc_create_groups' => true,
           );
 
+    # Hook to install OIDC app after Nextcloud is set up
+    hooks:
+      post-installation:
+        - id: install-oidc
+          command: ["php", "/var/www/html/occ", "app:install", "oidc_login"]
+          runAsUser: 33
+
     # Use internal SQLite database for simplicity
     internalDatabase:
       enabled: true
@@ -93,6 +108,11 @@ spec:
     # Ingress disabled - using HTTPRoute
     ingress:
       enabled: false
+
+    # Fix permissions on mounted volumes
+    podSecurityContext:
+      fsGroup: 33
+      fsGroupChangePolicy: "OnRootMismatch"
 
     # Resources
     resources:
