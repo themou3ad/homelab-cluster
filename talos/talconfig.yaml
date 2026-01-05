@@ -1,0 +1,50 @@
+---
+clusterName: gurzil-lab
+talosVersion: v1.8.3
+kubernetesVersion: v1.31.1
+endpoint: https://192.168.1.162:6443
+
+domain: lab.gurzil.org
+clusterPodNets:
+  - 10.244.0.0/16
+clusterSvcNets:
+  - 10.245.0.0/16
+
+cniConfig:
+  name: none
+
+nodes:
+  - hostname: gurzil-one
+    ipAddress: 192.168.1.162
+    controlPlane: true
+    installDisk: /dev/sda
+    networkInterfaces:
+      - interface: eth0
+        dhcp: true
+
+patches:
+  - |-
+    machine:
+      kubelet:
+        extraArgs:
+          rotate-server-certificates: "true"
+      time:
+        disabled: false
+        servers:
+          - time.cloudflare.com
+      install:
+        extraKernelArgs:
+          - net.ifnames=0
+    cluster:
+      allowSchedulingOnControlPlanes: true
+      proxy:
+        disabled: true
+
+controlPlane:
+  patches:
+    - |-
+      cluster:
+        apiServer:
+          certSANs:
+            - 192.168.1.162
+            - lab.gurzil.org
