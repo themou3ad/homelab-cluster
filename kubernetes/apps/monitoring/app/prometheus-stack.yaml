@@ -37,7 +37,7 @@ spec:
           auth_url: https://login.gurzil.org/application/o/authorize/
           token_url: https://login.gurzil.org/application/o/token/
           api_url: https://login.gurzil.org/application/o/userinfo/
-          role_attribute_path: contains(groups[*], 'admins') && 'Admin' || 'Viewer'
+          role_attribute_path: contains(groups[*], 'authentik Admins') && 'Admin' || 'Viewer'
 
       envFromSecret: grafana-oidc
 
