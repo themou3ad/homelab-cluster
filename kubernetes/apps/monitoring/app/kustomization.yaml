@@ -11,3 +11,4 @@ resources:
   - ./promtail.yaml
   - ./httproute.yaml
   - ./grafana-datasource.yaml
+  - ./postgres-exporter.yaml

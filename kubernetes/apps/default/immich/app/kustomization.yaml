@@ -9,3 +9,4 @@ resources:
   - ./pvc.yaml
   - ./postgresql.yaml
   - ./redis.yaml
+  - ./servicemonitor.yaml
