@@ -1,0 +1,13 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ./namespace.yaml
+  - ./prometheus-helmrepo.yaml
+  - ./grafana-helmrepo.yaml
+  - ./prometheus-stack.yaml
+  - ./loki.yaml
+  - ./promtail.yaml
+  - ./httproute.yaml
+  - ./grafana-datasource.yaml

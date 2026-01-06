@@ -7,6 +7,7 @@ resources:
   - ./default
   - ./flux-system
   - ./kube-system
+  - ./monitoring
   - ./network
   - ./portainer
   - ./tailscale

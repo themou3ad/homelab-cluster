@@ -1,0 +1,110 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: monitoring
+spec:
+  interval: 1h
+  timeout: 15m
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      version: "67.4.0"
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+  values:
+    # Grafana config
+    grafana:
+      enabled: true
+      adminPassword: ""  # Will use OIDC
+
+      grafana.ini:
+        server:
+          root_url: https://grafana.gurzil.org
+        auth:
+          disable_login_form: true
+        auth.generic_oauth:
+          enabled: true
+          name: Authentik
+          allow_sign_up: true
+          client_id: ${GRAFANA_OIDC_CLIENT_ID}
+          client_secret: ${GRAFANA_OIDC_CLIENT_SECRET}
+          scopes: openid profile email
+          auth_url: https://login.gurzil.org/application/o/authorize/
+          token_url: https://login.gurzil.org/application/o/token/
+          api_url: https://login.gurzil.org/application/o/userinfo/
+          role_attribute_path: contains(groups[*], 'admins') && 'Admin' || 'Viewer'
+
+      envFromSecret: grafana-oidc
+
+      persistence:
+        enabled: true
+        size: 5Gi
+        storageClassName: local-path
+
+      sidecar:
+        dashboards:
+          enabled: true
+          searchNamespace: ALL
+        datasources:
+          enabled: true
+
+    # Prometheus config
+    prometheus:
+      prometheusSpec:
+        retention: 15d
+        retentionSize: 10GB
+
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: local-path
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 20Gi
+
+        # Scrape all namespaces
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        ruleSelectorNilUsesHelmValues: false
+
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+
+    # Alertmanager config
+    alertmanager:
+      alertmanagerSpec:
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: local-path
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 1Gi
+
+    # Node exporter for node metrics
+    nodeExporter:
+      enabled: true
+
+    # kube-state-metrics for K8s object metrics
+    kubeStateMetrics:
+      enabled: true
+
+    # Disable components not needed for single-node
+    kubeProxy:
+      enabled: false
+    kubeEtcd:
+      enabled: false
+    kubeScheduler:
+      enabled: false
+    kubeControllerManager:
+      enabled: false
