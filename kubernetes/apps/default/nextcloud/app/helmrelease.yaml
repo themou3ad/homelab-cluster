@@ -89,42 +89,25 @@ spec:
     internalDatabase:
       enabled: true
 
-    # Use PostgreSQL subchart
+    # Disable bundled PostgreSQL - use external
     postgresql:
-      enabled: true
-      image:
-        registry: docker.io
-        repository: bitnami/postgresql
-        tag: "16"
-      global:
-        postgresql:
-          auth:
-            database: nextcloud
-            username: nextcloud
-            existingSecret: nextcloud-db-credentials
-            secretKeys:
-              userPasswordKey: password
-      primary:
-        persistence:
-          enabled: true
-          size: 5Gi
-          storageClass: local-path
+      enabled: false
 
-    # Enable Redis for better performance
-    redis:
+    # External PostgreSQL config
+    externalDatabase:
       enabled: true
-      image:
-        registry: docker.io
-        repository: bitnami/redis
-        tag: "7.4"
-      auth:
-        enabled: false
-      architecture: standalone
-      master:
-        persistence:
-          enabled: true
-          size: 1Gi
-          storageClass: local-path
+      type: postgresql
+      host: nextcloud-postgresql
+      database: nextcloud
+      user: nextcloud
+      existingSecret:
+        secretName: nextcloud-db-credentials
+        usernameKey: username
+        passwordKey: password
+
+    # Disable Redis for now - simplify deployment
+    redis:
+      enabled: false
 
     # Persistence
     persistence:
