@@ -85,9 +85,9 @@ spec:
           command: ["php", "/var/www/html/occ", "app:install", "oidc_login"]
           runAsUser: 33
 
-    # Keep SQLite temporarily for migration
+    # SQLite disabled - using PostgreSQL
     internalDatabase:
-      enabled: true
+      enabled: false
 
     # Disable bundled PostgreSQL - use external
     postgresql:
