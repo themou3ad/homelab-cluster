@@ -84,21 +84,37 @@ spec:
           command: ["php", "/var/www/html/occ", "app:install", "oidc_login"]
           runAsUser: 33
 
-    # Use internal SQLite database for simplicity
+    # Keep SQLite temporarily for migration
     internalDatabase:
       enabled: true
 
-    # Disable external PostgreSQL for now
-    externalDatabase:
-      enabled: false
-
-    # Disable PostgreSQL subchart
+    # Use PostgreSQL subchart
     postgresql:
-      enabled: false
+      enabled: true
+      global:
+        postgresql:
+          auth:
+            database: nextcloud
+            username: nextcloud
+            existingSecret: nextcloud-db-credentials
+            secretKeys:
+              userPasswordKey: password
+      primary:
+        persistence:
+          enabled: true
+          size: 5Gi
+          storageClass: local-path
 
-    # Disable Redis for now
+    # Enable Redis for better performance
     redis:
-      enabled: false
+      enabled: true
+      auth:
+        enabled: false
+      master:
+        persistence:
+          enabled: true
+          size: 1Gi
+          storageClass: local-path
 
     # Persistence
     persistence:
