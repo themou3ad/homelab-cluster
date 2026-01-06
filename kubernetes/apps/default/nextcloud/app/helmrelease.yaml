@@ -71,10 +71,11 @@ spec:
               'groups' => 'groups',
             ),
             'oidc_login_default_group' => 'users',
-            'oidc_login_scope' => 'openid profile email',
+            'oidc_login_scope' => 'openid profile email groups',
             'oidc_login_disable_registration' => false,
             'oidc_login_tls_verify' => true,
             'oidc_create_groups' => true,
+            'oidc_login_admin_groups' => array('authentik Admins'),
             'default_phone_region' => 'FR',
           );
 
