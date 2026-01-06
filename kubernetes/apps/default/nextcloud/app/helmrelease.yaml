@@ -132,6 +132,14 @@ spec:
           - NET_RAW
           - SYS_ADMIN
 
+    # Prometheus metrics
+    metrics:
+      enabled: true
+      https: true
+      serviceMonitor:
+        enabled: true
+        namespace: monitoring
+
     # Resources
     resources:
       requests:
