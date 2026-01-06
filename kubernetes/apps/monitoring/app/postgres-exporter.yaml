@@ -1,19 +1,9 @@
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: postgres-exporter
-  namespace: monitoring
-type: Opaque
-stringData:
-  nextcloud-uri: "postgresql://nextcloud:$(NEXTCLOUD_DB_PASSWORD)@nextcloud-postgresql.default.svc:5432/nextcloud?sslmode=disable"
-  immich-uri: "postgresql://immich:$(IMMICH_DB_PASSWORD)@immich-postgresql.default.svc:5432/immich?sslmode=disable"
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres-exporter
-  namespace: monitoring
+  namespace: default
   labels:
     app: postgres-exporter
 spec:
@@ -83,7 +73,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-exporter
-  namespace: monitoring
+  namespace: default
   labels:
     app: postgres-exporter
 spec:
@@ -103,6 +93,9 @@ metadata:
   name: postgres-exporter
   namespace: monitoring
 spec:
+  namespaceSelector:
+    matchNames:
+      - default
   selector:
     matchLabels:
       app: postgres-exporter
