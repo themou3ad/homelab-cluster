@@ -8,3 +8,4 @@ resources:
   - ./httproute.yaml
   - ./postgresql.yaml
   - ./onlyoffice.yaml
+  - ./coturn.yaml
