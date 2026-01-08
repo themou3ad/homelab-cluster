@@ -36,6 +36,7 @@ spec:
             - --use-auth-secret
             - --static-auth-secret=$(TURN_SECRET)
             - --realm=gurzil.org
+            - --external-ip=89.87.198.46/192.168.1.204
             - --no-cli
             - --no-multicast-peers
             - --no-tlsv1
