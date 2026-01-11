@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: oauth2-proxy-longhorn
+spec:
+  interval: 1h
+  path: ./kubernetes/apps/longhorn-system/oauth2-proxy/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: longhorn-system
+  wait: false

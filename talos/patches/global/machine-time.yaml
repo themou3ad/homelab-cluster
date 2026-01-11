@@ -1,6 +1,8 @@
 machine:
   time:
     disabled: false
+    # Boot anyway after 30s if NTP fails
+    bootTimeout: 30s
     servers:
-      - 162.159.200.1
-      - 162.159.200.123
+      - 216.239.35.0
+      - 216.239.35.4

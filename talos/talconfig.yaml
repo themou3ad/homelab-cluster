@@ -33,13 +33,14 @@ nodes:
           - "192.168.1.162/24"
         routes:
           - network: "0.0.0.0/0"
-            gateway: "192.168.1.1"
+            gateway: "192.168.1.254"
         mtu: 1500
         vip:
           ip: "192.168.1.200"
 
 # Global patches
 patches:
+  - "@./patches/global/machine-disks.yaml"
   - "@./patches/global/machine-files.yaml"
   - "@./patches/global/machine-kubelet.yaml"
   - "@./patches/global/machine-network.yaml"

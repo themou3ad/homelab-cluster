@@ -1,0 +1,10 @@
+machine:
+  disks:
+    # Primary storage disk - Seagate ST4000NT001 4TB
+    - device: /dev/sdb
+      partitions:
+        - mountpoint: /var/mnt/longhorn-sdb
+    # Replica storage disk - Seagate ST4000VN006 4TB
+    - device: /dev/sda
+      partitions:
+        - mountpoint: /var/mnt/longhorn-sda

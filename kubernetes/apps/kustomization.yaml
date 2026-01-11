@@ -7,6 +7,7 @@ resources:
   - ./default
   - ./flux-system
   - ./kube-system
+  - ./longhorn-system
   - ./monitoring
   - ./network
   - ./portainer
