@@ -110,10 +110,10 @@ spec:
     redis:
       enabled: false
 
-    # Persistence - using Longhorn replicated storage
+    # Persistence - using Longhorn replicated storage (3Ti max usable)
     persistence:
       enabled: true
-      size: 100Gi
+      size: 3Ti
       storageClass: longhorn-replicated
 
     # Ingress disabled - using HTTPRoute
