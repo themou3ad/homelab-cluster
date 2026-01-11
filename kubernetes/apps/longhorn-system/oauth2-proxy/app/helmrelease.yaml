@@ -54,7 +54,7 @@ spec:
 
     service:
       type: ClusterIP
-      port: 4180
+      portNumber: 4180
 
     resources:
       requests:
