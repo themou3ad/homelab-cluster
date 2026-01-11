@@ -5,3 +5,20 @@ machine:
     nodeIP:
       validSubnets:
         - 192.168.1.0/24
+    extraMounts:
+      # Longhorn storage mount - primary disk
+      - destination: /var/mnt/longhorn-sdb
+        type: bind
+        source: /var/mnt/longhorn-sdb
+        options:
+          - bind
+          - rshared
+          - rw
+      # Longhorn storage mount - secondary disk
+      - destination: /var/mnt/longhorn-sda
+        type: bind
+        source: /var/mnt/longhorn-sda
+        options:
+          - bind
+          - rshared
+          - rw
