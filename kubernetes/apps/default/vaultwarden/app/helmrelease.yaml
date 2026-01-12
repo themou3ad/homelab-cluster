@@ -37,11 +37,12 @@ spec:
     # Signups disabled - only via SSO
     signupsAllowed: false
 
-    # Persistence on Longhorn
-    persistence:
-      enabled: true
+    # Data persistence on Longhorn
+    data:
+      name: vaultwarden-data
       size: 1Gi
-      storageClass: longhorn-replicated
+      class: longhorn-replicated
+      keepPvc: true
 
     # Service
     service:
@@ -63,7 +64,6 @@ spec:
       capabilities:
         drop:
           - ALL
-      readOnlyRootFilesystem: true
 
     # Ingress disabled - using HTTPRoute
     ingress:
