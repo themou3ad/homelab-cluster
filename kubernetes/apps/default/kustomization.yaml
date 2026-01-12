@@ -13,3 +13,5 @@ resources:
   - ./nextcloud/ks.yaml
   - ./vaultwarden/ks.yaml
   - ./bookstack/ks.yaml
+  - ./ntfy/ks.yaml
+  - ./oauth2-proxy-ntfy/ks.yaml

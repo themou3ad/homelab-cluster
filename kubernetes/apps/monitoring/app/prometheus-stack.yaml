@@ -88,6 +88,20 @@ spec:
 
     # Alertmanager config
     alertmanager:
+      config:
+        global:
+          resolve_timeout: 5m
+        route:
+          receiver: 'ntfy'
+          group_by: ['alertname', 'namespace']
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 4h
+        receivers:
+          - name: 'ntfy'
+            webhook_configs:
+              - url: 'http://ntfy.default.svc.cluster.local/alertes'
+                send_resolved: true
       alertmanagerSpec:
         storage:
           volumeClaimTemplate:
