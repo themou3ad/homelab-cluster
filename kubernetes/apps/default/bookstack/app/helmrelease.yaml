@@ -60,6 +60,7 @@ spec:
       # Group sync - map Authentik groups to BookStack roles
       OIDC_USER_TO_GROUPS: "true"
       OIDC_GROUPS_CLAIM: "roles"
+      OIDC_ADDITIONAL_SCOPES: "roles"
       OIDC_REMOVE_FROM_GROUPS: "false"
 
     envFrom:
