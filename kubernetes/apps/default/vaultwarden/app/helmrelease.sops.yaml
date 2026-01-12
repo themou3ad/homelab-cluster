@@ -1,0 +1,82 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vaultwarden
+spec:
+  interval: 1h
+  timeout: 10m
+  chart:
+    spec:
+      chart: vaultwarden
+      version: 0.25.0
+      sourceRef:
+        kind: HelmRepository
+        name: vaultwarden
+  values:
+    domain: https://passwords.gurzil.org
+    # Admin token for admin panel (optional)
+    adminToken:
+      existingSecret: vaultwarden-admin
+      existingSecretKey: token
+    # SSO/OIDC Configuration
+    image:
+      extraSecrets:
+        - key: SSO_CLIENT_ID
+          value: xDIZiRH0eN1ZjepMJeM86HLj2XSW5ytEUi2FlPs3
+        - key: SSO_CLIENT_SECRET
+          value: WzBFfTM3sDJwhchHmit2HK9QmuKGdHLQy7O2acBYUYnpwNq3plFNXeN1XcasMm0Ig1Dl1QrZgXzk1lOhwi9lMETVwEkH9nIAhMubucRDb58dy9Msrk9xLRUM8sNTuVQZ
+      extraVars:
+        - key: SSO_ENABLED
+          value: "true"
+        - key: SSO_AUTHORITY
+          value: https://login.gurzil.org/application/o/passwords/
+        - key: SSO_SIGNUPS_MATCH_EMAIL
+          value: "true"
+        - key: SSO_ALLOW_INSECURE_HTTP
+          value: "false"
+    # Signups disabled - only via SSO
+    signupsAllowed: "false"
+    # Data persistence on Longhorn
+    data:
+      name: ENC[AES256_GCM,data:TW6SUq5CjI+aBvAtUO1y5A==,iv:ZtKlQi2mHO9syr4CY/LBTWgL2F0eWmxW82+vIhtXHDs=,tag:d8WLG4HjieWSe8xHL2nkEA==,type:str]
+      size: ENC[AES256_GCM,data:Ok97,iv:N21ja2QkISuVYc509JJVeVYIEoocije0iO/GIQhk0PI=,tag:ZXR4K6zPF9Nb4q39QQAJJA==,type:str]
+      class: ENC[AES256_GCM,data:CyTCNl6l7VzAZjGt2UvP/nFh/w==,iv:69JznyJL75+S6Q9K+0jO/lKGGGV4K8wUAO4XczZS0WY=,tag:0ifu7pP1k0gSwLqL5dqs1Q==,type:str]
+      accessMode: ENC[AES256_GCM,data:NRUyN2agKv2StB2VUA==,iv:BnLqZ4vO/ePPeM5iM46tLf+EseqmSt+Mm3EKRQgYlfw=,tag:im+uO0YwtaRhhPlGcLZv3g==,type:str]
+      keepPvc: ENC[AES256_GCM,data:n6hALA==,iv:st/UgOlw8P/KGjafP1dErTZLy6twTg6kdsKPEWzAPVg=,tag:lnUOCAGBiY41pMxfZFslUg==,type:bool]
+    # Service
+    service:
+      type: ClusterIP
+      port: 80
+    # Resources
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    # Security context
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    # Ingress disabled - using HTTPRoute
+    ingress:
+      enabled: false
+sops:
+  age:
+    - recipient: age1rhp2xf08fczha5uhwp8xr5sw3kwka5qemhkx7qc9l0g4s7sv550q92jkgd
+      enc: |
+        -----BEGIN AGE ENCRYPTED FILE-----
+        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA2alVwYkJMNE85ZTdaUS81
+        VjNYSWdpVDd6c3E5dFlQeHZyZ01nSkh2U0JBClo4eUpDSUsvQW52M00rM1ZSRnRx
+        dSt5dDhQK2ZyRUZZalBUTFFXZWU5cWMKLS0tIGQwa2N2b2xTdW8veEZvaGxtbndZ
+        ZXpFUDhYNC9DTUJwZDZIUDB6cXVDTzQKv50jL1n7NzBzAM+B8KOzTVcP0HaFUOMX
+        DmiYux00N+ztbWAFThKvstJQnq2/wLyVaVi7G4Y1BsrZhCLNaK/XEA==
+        -----END AGE ENCRYPTED FILE-----
+  lastmodified: "2026-01-12T10:47:19Z"
+  mac: ENC[AES256_GCM,data:9+E0Kai7IVNCCBeoLutLrmWy1VanOesoG+J3o+nMdisVcX4IeWNQMiBnBbrM06Hxz7SK+Ax71ERzijbb4H699ul1ZRUDh6XoHUpFvJY1e9QCQ5eY173ROpjGYFTxoYyOOghBZ6/1qXI1+gznabqLEAGx0PZmvfF4UPM6nkBRo+c=,iv:xwHxivcAY5tsPK38AQ4k+ntNe+ICmvcE/tHd6JxroGg=,tag:iJA3Hh1/6W2aNHRpXVmMBQ==,type:str]
+  encrypted_regex: ^(data|stringData)$
+  mac_only_encrypted: true
+  version: 3.11.0
