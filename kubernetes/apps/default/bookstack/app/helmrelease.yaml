@@ -19,6 +19,9 @@ spec:
       tag: version-v24.12.1
 
     env:
+      # App Key (for encryption)
+      APP_KEY: "base64:O+5ie1/oLqUXod2tG1Pk84zcwSzTmLxbGN4joEmJMWA="
+
       # App URL
       APP_URL: "https://docs.gurzil.org"
 
