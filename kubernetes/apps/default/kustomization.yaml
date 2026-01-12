@@ -12,3 +12,4 @@ resources:
   - ./immich/ks.yaml
   - ./nextcloud/ks.yaml
   - ./vaultwarden/ks.yaml
+  - ./bookstack/ks.yaml

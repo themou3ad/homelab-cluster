@@ -1,0 +1,87 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: bookstack
+spec:
+  interval: 1h
+  timeout: 10m
+  chart:
+    spec:
+      chart: bookstack
+      version: "0.20.0"
+      sourceRef:
+        kind: HelmRepository
+        name: gabe565
+  values:
+    image:
+      repository: lscr.io/linuxserver/bookstack
+      tag: version-v24.12.1
+
+    env:
+      # App URL
+      APP_URL: "https://docs.gurzil.org"
+
+      # Database
+      DB_HOST: bookstack-mariadb
+      DB_PORT: "3306"
+      DB_DATABASE: bookstack
+      DB_USERNAME: bookstack
+
+      # OIDC Configuration
+      AUTH_METHOD: "oidc"
+      AUTH_AUTO_INITIATE: "true"
+      OIDC_NAME: "Authentik"
+      OIDC_DISPLAY_NAME_CLAIMS: "name"
+      OIDC_CLIENT_ID:
+        valueFrom:
+          secretKeyRef:
+            name: bookstack-oidc
+            key: client-id
+      OIDC_CLIENT_SECRET:
+        valueFrom:
+          secretKeyRef:
+            name: bookstack-oidc
+            key: client-secret
+      OIDC_ISSUER: "https://login.gurzil.org/application/o/bookstack/"
+      OIDC_ISSUER_DISCOVER: "true"
+
+    envFrom:
+      - secretRef:
+          name: bookstack-db
+
+    persistence:
+      config:
+        enabled: true
+        storageClass: longhorn-replicated
+        size: 1Gi
+
+    service:
+      main:
+        ports:
+          http:
+            port: 80
+
+    ingress:
+      main:
+        enabled: false
+
+    mariadb:
+      enabled: true
+      auth:
+        database: bookstack
+        username: bookstack
+        existingSecret: bookstack-db
+      primary:
+        persistence:
+          enabled: true
+          storageClass: longhorn-replicated
+          size: 2Gi
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
