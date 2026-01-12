@@ -35,15 +35,17 @@ spec:
           value: "true"
         - key: SSO_ALLOW_INSECURE_HTTP
           value: "false"
+        - key: SSO_SCOPES
+          value: openid email profile offline_access
     # Signups disabled - only via SSO
     signupsAllowed: "false"
     # Data persistence on Longhorn
     data:
-      name: ENC[AES256_GCM,data:e3tfRkQdV89EJJP/hkKEdw==,iv:tBHYYvYe2FhM7W8K+Wzmzr0Y62KFPcnS5MnBIpo+i3g=,tag:Pgxr9ykEj38xWZxlB41n9Q==,type:str]
-      size: ENC[AES256_GCM,data:R4Dg,iv:P85YMNbp9Z4FDPVpqJpsVBr3Ivq8YlggJ3srDdsKJf0=,tag:CApg3orxMBPN+onWu1H0ew==,type:str]
-      class: ENC[AES256_GCM,data:o1Oyy3V6QPIJ2gEm4cbaaT/xBQ==,iv:ocC+5dwAipI40jDoh4adwgENeoM+FfTYD3gSyBufZVk=,tag:ldf/YljSupV56FNHmW7VXg==,type:str]
-      accessMode: ENC[AES256_GCM,data:sbbfQ8tfsVOj2rdMhg==,iv:n3kx44hV4FinfnohR7yXu1a/7xopLuY3T9gBxSUDKK4=,tag:dc3zRAqdy0asK68/DTZzLw==,type:str]
-      keepPvc: ENC[AES256_GCM,data:TyLpKg==,iv:jTJyjVL+tWvR21mnlKMFvpAEua2j72ByfXwqr0rKvkk=,tag:iACn0bpCtQslLgPxKpMsVg==,type:bool]
+      name: ENC[AES256_GCM,data:MCYNOEiGSy/K229tdpeHXA==,iv:WxtfiWEO2fl2v0r+myF+XwYi69VNT96pOmRRlQdjWP8=,tag:C9pLzb+gVBTxZcfGFHV8IQ==,type:str]
+      size: ENC[AES256_GCM,data:n0PF,iv:FpYtMRbEQle1p7oMQxoKWxDoZHEMdTo4fpXtG2UgEn4=,tag:Dli7mHB8Im4hSxM3ENW1sw==,type:str]
+      class: ENC[AES256_GCM,data:DZ2wCflWKL8CQFDyaV22EwJZsg==,iv:PQASGqpx64j/ALAHatDZdS5l3NLQmOywaXy7SXDy/g0=,tag:SCjRWvfD4pBcAyFBd4bITw==,type:str]
+      accessMode: ENC[AES256_GCM,data:S98vf3+g3UdsCmMKUw==,iv:fsvWdUYIdumy9ryu3qJloyCW4WyiXcguuLFXQpiIzQM=,tag:QPlKxvZPBEyv7tIZ2NjX5g==,type:str]
+      keepPvc: ENC[AES256_GCM,data:iMH9Jw==,iv:YUhM/7FzMcm0ZJzmUPnXYSZv52m1CTZH2jYuBXWZu3w=,tag:mDeR51PMfDY4Wj6jgO0yPw==,type:bool]
     # Service
     service:
       type: ClusterIP
@@ -70,14 +72,14 @@ sops:
     - recipient: age1rhp2xf08fczha5uhwp8xr5sw3kwka5qemhkx7qc9l0g4s7sv550q92jkgd
       enc: |
         -----BEGIN AGE ENCRYPTED FILE-----
-        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAyK2lSaVRPN2xJVEU0dExr
-        ME1lRUlSM3RzNVFZN092aWlTRjV6UjZlVFNFCmI0YTBKUzJkZWZtT0wySjNvSVVh
-        TU5YWXVMV1pTUFp0OVozcE5BNVdFUkUKLS0tIHBOSXhEdjhJc3M1aCtnd1UvYi9x
-        MTBSZVAxTk8xRDgwMm5qNWI3SVBBUUUKffIJtYar1hK1Xr0pnqN0xGITtkxVC8Ya
-        SqTI8RxK5HZ+Mvgp8tRjb2GI2YliivjYvR1tvfmDHW28kBIlJzcP3A==
+        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB3akVKSmFaOUtHaCtEOUg0
+        OUNad0RpSGRnRWc1aTcreHlLbmZyRDdMaUFjCkxxZFVCWDBFS3p6b3IzNk9IRzdZ
+        ODB5S3hvQnFWRTZZa05Lc016WU44SzAKLS0tIHc1aC81b3BOZi9FTFcvWEtjZWV0
+        amFCK0VITHI3OU90RjNzR0JBQXB4U2MK70xBF8tjTP5Hwu8c+F3PS7rmc7osaNG+
+        CBA4gUEptRVngLL+/7NXJm53ir6N6v1zPUcceqVp4A39h0aSxKF1dQ==
         -----END AGE ENCRYPTED FILE-----
-  lastmodified: "2026-01-12T10:52:01Z"
-  mac: ENC[AES256_GCM,data:PE/jZQYkhduKvkfxZkL36OB1JRKIFus6/HHjFOUWdIeWmgFAJOcj59qLRe2McINejOwYvyy1DG540K5Mgfa8Szn/aa76F7ZdLxi0wIRY2y3GURWMkhB1bBc2hymRklOgbxefQSi4aZUfBpK46lTcHJvQogZEjoYO4ntyt2I17IU=,iv:G9ZrbpNXaI55+TvYBdlbBC3WsDb/TiYeTJD9cHeG/BI=,tag:fHifb9QddLlSqNVH/gmmyw==,type:str]
+  lastmodified: "2026-01-12T12:54:05Z"
+  mac: ENC[AES256_GCM,data:62KXC3abtMngzd23fz8oJrrtiHsWsaumVraoqjxPnKKu1/7J0kucar+Jy6Mb4F+lBq3WPA6I7HKh0IZ/1eIWApxJsuX0A4GPSRtTdWc6m5MTSnj2U15c9H3Ok9Y4/19s5+IZY4x4zS/H3WpSkRYnDm2p/y9DP3aV/4u5slDmJwU=,iv:XMRKwSTvRjyHSYORFdSeclFgDqAr+SHplVl4UJOoJ5k=,tag:NY4F7976+qRuOkoH8gtrWA==,type:str]
   encrypted_regex: ^(data|stringData)$
   mac_only_encrypted: true
   version: 3.11.0
