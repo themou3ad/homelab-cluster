@@ -27,6 +27,11 @@ spec:
       DB_PORT: "3306"
       DB_DATABASE: bookstack
       DB_USERNAME: bookstack
+      DB_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: bookstack-db
+            key: DB_PASSWORD
 
       # OIDC Configuration
       AUTH_METHOD: "oidc"
@@ -68,6 +73,10 @@ spec:
 
     mariadb:
       enabled: true
+      image:
+        registry: docker.io
+        repository: bitnami/mariadb
+        tag: "11.2"
       auth:
         database: bookstack
         username: bookstack
