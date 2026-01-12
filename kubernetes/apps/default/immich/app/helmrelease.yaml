@@ -55,6 +55,12 @@ spec:
           memory: 256Mi
         limits:
           memory: 2Gi
+      persistence:
+        nextcloud:
+          enabled: true
+          existingClaim: nextcloud-nextcloud
+          readOnly: true
+          mountPath: /mnt/nextcloud
 
     machine-learning:
       enabled: true
