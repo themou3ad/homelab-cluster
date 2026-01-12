@@ -19,8 +19,12 @@ spec:
       tag: version-v24.12.1
 
     env:
-      # App Key (for encryption)
-      APP_KEY: "base64:O+5ie1/oLqUXod2tG1Pk84zcwSzTmLxbGN4joEmJMWA="
+      # App Key (from secret)
+      APP_KEY:
+        valueFrom:
+          secretKeyRef:
+            name: bookstack-db
+            key: APP_KEY
 
       # App URL
       APP_URL: "https://docs.gurzil.org"
@@ -53,6 +57,10 @@ spec:
             key: client-secret
       OIDC_ISSUER: "https://login.gurzil.org/application/o/bookstack/"
       OIDC_ISSUER_DISCOVER: "true"
+      # Group sync - map Authentik groups to BookStack roles
+      OIDC_USER_TO_GROUPS: "true"
+      OIDC_GROUPS_CLAIM: "groups"
+      OIDC_REMOVE_FROM_GROUPS: "false"
 
     envFrom:
       - secretRef:
