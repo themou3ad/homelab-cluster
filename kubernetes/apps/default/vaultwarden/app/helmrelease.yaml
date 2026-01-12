@@ -21,21 +21,27 @@ spec:
       existingSecret: vaultwarden-admin
       existingSecretKey: token
 
-    # SSO/OIDC Configuration
-    sso:
-      enabled: true
-      clientId:
-        existingSecret: vaultwarden-oidc
-        existingSecretKey: client-id
-      clientSecret:
-        existingSecret: vaultwarden-oidc
-        existingSecretKey: client-secret
-      authority: "https://login.gurzil.org/application/o/passwords/"
-      # Allow users to sign up via SSO
-      signupsMatch: true
+    # SSO/OIDC Configuration via extraVars and extraSecrets
+    image:
+      extraSecrets:
+        - key: SSO_CLIENT_ID
+          secretName: vaultwarden-oidc
+          secretKey: client-id
+        - key: SSO_CLIENT_SECRET
+          secretName: vaultwarden-oidc
+          secretKey: client-secret
+      extraVars:
+        - key: SSO_ENABLED
+          value: "true"
+        - key: SSO_AUTHORITY
+          value: "https://login.gurzil.org/application/o/passwords/"
+        - key: SSO_SIGNUPS_MATCH_EMAIL
+          value: "true"
+        - key: SSO_ALLOW_INSECURE_HTTP
+          value: "false"
 
     # Signups disabled - only via SSO
-    signupsAllowed: false
+    signupsAllowed: "false"
 
     # Data persistence on Longhorn
     data:
