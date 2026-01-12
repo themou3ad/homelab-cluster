@@ -42,7 +42,7 @@ spec:
       persistence:
         enabled: true
         size: 5Gi
-        storageClassName: local-path
+        storageClassName: longhorn-replicated
 
       sidecar:
         dashboards:
@@ -63,11 +63,15 @@ spec:
           runAsUser: 65534
           runAsGroup: 65534
 
-        # Disable persistence temporarily - using emptyDir
+        # Persistent storage on Longhorn
         storageSpec:
-          emptyDir:
-            medium: ""
-            sizeLimit: 10Gi
+          volumeClaimTemplate:
+            spec:
+              storageClassName: longhorn-replicated
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 20Gi
 
         # Scrape all namespaces
         serviceMonitorSelectorNilUsesHelmValues: false
@@ -88,7 +92,7 @@ spec:
         storage:
           volumeClaimTemplate:
             spec:
-              storageClassName: local-path
+              storageClassName: longhorn-replicated
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
