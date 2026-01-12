@@ -14,12 +14,13 @@ spec:
         name: vaultwarden
   values:
     domain: https://passwords.gurzil.org
-    # Admin token for admin panel (optional)
+    # Admin token for admin panel
     adminToken:
       existingSecret: vaultwarden-admin
       existingSecretKey: token
-    # SSO/OIDC Configuration
+    # Use testing image for SSO support + SSO Configuration
     image:
+      tag: testing
       extraSecrets:
         - key: SSO_CLIENT_ID
           value: xDIZiRH0eN1ZjepMJeM86HLj2XSW5ytEUi2FlPs3
@@ -38,11 +39,11 @@ spec:
     signupsAllowed: "false"
     # Data persistence on Longhorn
     data:
-      name: ENC[AES256_GCM,data:TW6SUq5CjI+aBvAtUO1y5A==,iv:ZtKlQi2mHO9syr4CY/LBTWgL2F0eWmxW82+vIhtXHDs=,tag:d8WLG4HjieWSe8xHL2nkEA==,type:str]
-      size: ENC[AES256_GCM,data:Ok97,iv:N21ja2QkISuVYc509JJVeVYIEoocije0iO/GIQhk0PI=,tag:ZXR4K6zPF9Nb4q39QQAJJA==,type:str]
-      class: ENC[AES256_GCM,data:CyTCNl6l7VzAZjGt2UvP/nFh/w==,iv:69JznyJL75+S6Q9K+0jO/lKGGGV4K8wUAO4XczZS0WY=,tag:0ifu7pP1k0gSwLqL5dqs1Q==,type:str]
-      accessMode: ENC[AES256_GCM,data:NRUyN2agKv2StB2VUA==,iv:BnLqZ4vO/ePPeM5iM46tLf+EseqmSt+Mm3EKRQgYlfw=,tag:im+uO0YwtaRhhPlGcLZv3g==,type:str]
-      keepPvc: ENC[AES256_GCM,data:n6hALA==,iv:st/UgOlw8P/KGjafP1dErTZLy6twTg6kdsKPEWzAPVg=,tag:lnUOCAGBiY41pMxfZFslUg==,type:bool]
+      name: ENC[AES256_GCM,data:e3tfRkQdV89EJJP/hkKEdw==,iv:tBHYYvYe2FhM7W8K+Wzmzr0Y62KFPcnS5MnBIpo+i3g=,tag:Pgxr9ykEj38xWZxlB41n9Q==,type:str]
+      size: ENC[AES256_GCM,data:R4Dg,iv:P85YMNbp9Z4FDPVpqJpsVBr3Ivq8YlggJ3srDdsKJf0=,tag:CApg3orxMBPN+onWu1H0ew==,type:str]
+      class: ENC[AES256_GCM,data:o1Oyy3V6QPIJ2gEm4cbaaT/xBQ==,iv:ocC+5dwAipI40jDoh4adwgENeoM+FfTYD3gSyBufZVk=,tag:ldf/YljSupV56FNHmW7VXg==,type:str]
+      accessMode: ENC[AES256_GCM,data:sbbfQ8tfsVOj2rdMhg==,iv:n3kx44hV4FinfnohR7yXu1a/7xopLuY3T9gBxSUDKK4=,tag:dc3zRAqdy0asK68/DTZzLw==,type:str]
+      keepPvc: ENC[AES256_GCM,data:TyLpKg==,iv:jTJyjVL+tWvR21mnlKMFvpAEua2j72ByfXwqr0rKvkk=,tag:iACn0bpCtQslLgPxKpMsVg==,type:bool]
     # Service
     service:
       type: ClusterIP
@@ -69,14 +70,14 @@ sops:
     - recipient: age1rhp2xf08fczha5uhwp8xr5sw3kwka5qemhkx7qc9l0g4s7sv550q92jkgd
       enc: |
         -----BEGIN AGE ENCRYPTED FILE-----
-        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA2alVwYkJMNE85ZTdaUS81
-        VjNYSWdpVDd6c3E5dFlQeHZyZ01nSkh2U0JBClo4eUpDSUsvQW52M00rM1ZSRnRx
-        dSt5dDhQK2ZyRUZZalBUTFFXZWU5cWMKLS0tIGQwa2N2b2xTdW8veEZvaGxtbndZ
-        ZXpFUDhYNC9DTUJwZDZIUDB6cXVDTzQKv50jL1n7NzBzAM+B8KOzTVcP0HaFUOMX
-        DmiYux00N+ztbWAFThKvstJQnq2/wLyVaVi7G4Y1BsrZhCLNaK/XEA==
+        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAyK2lSaVRPN2xJVEU0dExr
+        ME1lRUlSM3RzNVFZN092aWlTRjV6UjZlVFNFCmI0YTBKUzJkZWZtT0wySjNvSVVh
+        TU5YWXVMV1pTUFp0OVozcE5BNVdFUkUKLS0tIHBOSXhEdjhJc3M1aCtnd1UvYi9x
+        MTBSZVAxTk8xRDgwMm5qNWI3SVBBUUUKffIJtYar1hK1Xr0pnqN0xGITtkxVC8Ya
+        SqTI8RxK5HZ+Mvgp8tRjb2GI2YliivjYvR1tvfmDHW28kBIlJzcP3A==
         -----END AGE ENCRYPTED FILE-----
-  lastmodified: "2026-01-12T10:47:19Z"
-  mac: ENC[AES256_GCM,data:9+E0Kai7IVNCCBeoLutLrmWy1VanOesoG+J3o+nMdisVcX4IeWNQMiBnBbrM06Hxz7SK+Ax71ERzijbb4H699ul1ZRUDh6XoHUpFvJY1e9QCQ5eY173ROpjGYFTxoYyOOghBZ6/1qXI1+gznabqLEAGx0PZmvfF4UPM6nkBRo+c=,iv:xwHxivcAY5tsPK38AQ4k+ntNe+ICmvcE/tHd6JxroGg=,tag:iJA3Hh1/6W2aNHRpXVmMBQ==,type:str]
+  lastmodified: "2026-01-12T10:52:01Z"
+  mac: ENC[AES256_GCM,data:PE/jZQYkhduKvkfxZkL36OB1JRKIFus6/HHjFOUWdIeWmgFAJOcj59qLRe2McINejOwYvyy1DG540K5Mgfa8Szn/aa76F7ZdLxi0wIRY2y3GURWMkhB1bBc2hymRklOgbxefQSi4aZUfBpK46lTcHJvQogZEjoYO4ntyt2I17IU=,iv:G9ZrbpNXaI55+TvYBdlbBC3WsDb/TiYeTJD9cHeG/BI=,tag:fHifb9QddLlSqNVH/gmmyw==,type:str]
   encrypted_regex: ^(data|stringData)$
   mac_only_encrypted: true
   version: 3.11.0
