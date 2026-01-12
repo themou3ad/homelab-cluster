@@ -76,7 +76,7 @@ spec:
       image:
         registry: docker.io
         repository: bitnami/mariadb
-        tag: "11.2"
+        tag: "latest"
       auth:
         database: bookstack
         username: bookstack
