@@ -77,6 +77,17 @@ spec:
             'oidc_create_groups' => true,
             'oidc_login_admin_groups' => array('authentik Admins'),
             'default_phone_region' => 'FR',
+            'enabledPreviewProviders' => array(
+              'OC\Preview\PNG',
+              'OC\Preview\JPEG',
+              'OC\Preview\GIF',
+              'OC\Preview\BMP',
+              'OC\Preview\XBitmap',
+              'OC\Preview\Movie',
+              'OC\Preview\MKV',
+              'OC\Preview\MP4',
+              'OC\Preview\AVI',
+            ),
           );
 
     # Hook to install OIDC app after Nextcloud is set up
@@ -141,6 +152,14 @@ spec:
         enabled: true
         namespace: monitoring
 
+    # Lifecycle hooks - install ffmpeg for Memories video thumbnails
+    lifecycle:
+      postStartCommand:
+        - /bin/sh
+        - -c
+        - |
+          apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
     # Resources
     resources:
       requests:
@@ -150,13 +169,13 @@ spec:
         cpu: 2000m
         memory: 2Gi
 
-    # Increase probe timeouts for initial setup
+    # Increase probe timeouts for initial setup (ffmpeg install takes ~60s)
     startupProbe:
       enabled: true
-      initialDelaySeconds: 30
+      initialDelaySeconds: 60
       periodSeconds: 10
       timeoutSeconds: 5
-      failureThreshold: 30
+      failureThreshold: 60
       successThreshold: 1
     livenessProbe:
       enabled: true
