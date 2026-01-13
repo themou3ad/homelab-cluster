@@ -10,17 +10,13 @@ data:
     name: ntfy_alerts
     log_level: info
     format: |
-      {
-        "topic": "security",
-        "title": "CrowdSec Alert",
-        "message": "{{range .}}IP {{.Source.IP}} bloquee pour {{.Scenario}}{{end}}",
-        "priority": "high",
-        "tags": ["warning","skull"]
-      }
+      {{range .}}IP {{.Source.IP}} bloquee pour {{.Scenario}}{{end}}
     url: http://ntfy.default.svc.cluster.local/security
     method: POST
     headers:
-      Content-Type: application/json
+      Title: CrowdSec Alert
+      Priority: high
+      Tags: warning,skull
   profiles.yaml: |
     name: default_ip_remediation
     filters:
