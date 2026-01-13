@@ -13,3 +13,4 @@ resources:
   - ./grafana-datasource.yaml
   - ./postgres-exporter.yaml
   - ./alerts.yaml
+  - ./crowdsec-dashboard.yaml
