@@ -1,0 +1,83 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: crowdsec
+  namespace: security
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: crowdsec
+      version: "0.17.0"
+      sourceRef:
+        kind: HelmRepository
+        name: crowdsec
+  values:
+    container_runtime: containerd
+
+    # LAPI (Local API) - central component
+    lapi:
+      replicas: 1
+      env:
+        - name: ENROLL_KEY
+          valueFrom:
+            secretKeyRef:
+              name: crowdsec-keys
+              key: enroll-key
+        - name: ENROLL_INSTANCE_NAME
+          value: "gurzil-homelab"
+        - name: ENROLL_TAGS
+          value: "k8s homelab"
+
+      persistentVolume:
+        data:
+          enabled: true
+          storageClassName: longhorn-replicated
+          size: 1Gi
+        config:
+          enabled: true
+          storageClassName: longhorn-replicated
+          size: 100Mi
+
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+
+    # Agent - collects and parses logs
+    agent:
+      env:
+        - name: COLLECTIONS
+          value: "crowdsecurity/linux crowdsecurity/nginx crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/sshd"
+        - name: PARSERS
+          value: "crowdsecurity/cri-logs"
+
+      acquisition:
+        # Envoy Gateway access logs
+        - namespace: network
+          podName: envoy-*
+          program: envoy
+          poll_without_inotify: true
+
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+
+      persistentVolume:
+        config:
+          enabled: true
+          storageClassName: longhorn-replicated
+          size: 100Mi
