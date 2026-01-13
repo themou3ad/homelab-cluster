@@ -27,7 +27,7 @@ spec:
                   name: tailscale-auth
                   key: TS_AUTHKEY
             - name: TS_EXTRA_ARGS
-              value: "--login-server=https://headscale.gurzil.org --reset --accept-routes"
+              value: "--login-server=https://headscale.gurzil.org --reset --accept-routes --advertise-routes=192.168.1.0/24"
             - name: TS_HOSTNAME
               value: "gurzil-homelab"
             - name: TS_USERSPACE
