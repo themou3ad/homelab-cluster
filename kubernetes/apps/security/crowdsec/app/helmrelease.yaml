@@ -29,40 +29,17 @@ spec:
           value: "gurzil-homelab"
         - name: ENROLL_TAGS
           value: "k8s homelab"
-        # Install HTTP notification plugin
-        - name: PLUGIN_NOTIF_HTTP
-          value: "true"
-
-      # Notification configuration
-      config:
-        notifications:
-          http.yaml: |
-            type: http
-            name: ntfy_alerts
-            log_level: info
-            format: |
-              {
-                "topic": "security",
-                "title": "🚨 CrowdSec Alert",
-                "message": "{{range .}}IP {{.Source_ip}} bloquee pour {{.Scenario}} ({{.Source_country}}){{end}}",
-                "priority": "high",
-                "tags": ["warning","skull"]
-              }
-            url: http://ntfy.default.svc.cluster.local/security
-            method: POST
-            headers:
-              Content-Type: application/json
-
-        profiles.yaml: |
-          name: default_ip_remediation
-          filters:
-            - Alert.Remediation == true && Alert.GetScope() == "Ip"
-          decisions:
-            - type: ban
-              duration: 4h
-          notifications:
-            - ntfy_alerts
-          on_success: break
+      extraVolumes:
+        - name: notification-config
+          configMap:
+            name: crowdsec-notification-config
+      extraVolumeMounts:
+        - name: notification-config
+          mountPath: /etc/crowdsec/notifications/http.yaml
+          subPath: http.yaml
+        - name: notification-config
+          mountPath: /etc/crowdsec/profiles.yaml.local
+          subPath: profiles.yaml
 
       persistentVolume:
         data:
