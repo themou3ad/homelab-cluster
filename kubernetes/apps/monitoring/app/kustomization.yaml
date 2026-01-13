@@ -12,3 +12,4 @@ resources:
   - ./httproute.yaml
   - ./grafana-datasource.yaml
   - ./postgres-exporter.yaml
+  - ./alerts.yaml

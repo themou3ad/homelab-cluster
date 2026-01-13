@@ -1,0 +1,190 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cluster-alerts
+  namespace: monitoring
+spec:
+  groups:
+    # Node alerts
+    - name: node-alerts
+      rules:
+        - alert: NodeDown
+          expr: up{job="node-exporter"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Node {{ $labels.instance }} down"
+            description: "Node exporter n'est plus accessible depuis 2 minutes."
+
+        - alert: NodeHighCPU
+          expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "CPU elevee sur {{ $labels.instance }}"
+            description: "Utilisation CPU > 85% depuis 5 minutes (actuel: {{ $value | printf \"%.1f\" }}%)"
+
+        - alert: NodeHighMemory
+          expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Memoire elevee sur {{ $labels.instance }}"
+            description: "Utilisation memoire > 85% depuis 5 minutes (actuel: {{ $value | printf \"%.1f\" }}%)"
+
+        - alert: NodeDiskPressure
+          expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"})) * 100 > 85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Disque presque plein sur {{ $labels.instance }}"
+            description: "Partition {{ $labels.mountpoint }} > 85% (actuel: {{ $value | printf \"%.1f\" }}%)"
+
+        - alert: NodeDiskCritical
+          expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"})) * 100 > 95
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Disque CRITIQUE sur {{ $labels.instance }}"
+            description: "Partition {{ $labels.mountpoint }} > 95% (actuel: {{ $value | printf \"%.1f\" }}%)"
+
+    # Kubernetes pod alerts
+    - name: kubernetes-alerts
+      rules:
+        - alert: PodCrashLooping
+          expr: rate(kube_pod_container_status_restarts_total[15m]) * 60 * 15 > 3
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} en crash loop"
+            description: "Le pod redémarre frequemment ({{ $value | printf \"%.0f\" }} restarts en 15min)"
+
+        - alert: PodNotReady
+          expr: kube_pod_status_phase{phase=~"Pending|Unknown"} == 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} non ready"
+            description: "Le pod est en phase {{ $labels.phase }} depuis 10 minutes"
+
+        - alert: PodOOMKilled
+          expr: kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1
+          for: 0m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} OOM killed"
+            description: "Le container {{ $labels.container }} a été tué pour dépassement de mémoire"
+
+        - alert: DeploymentReplicasMismatch
+          expr: kube_deployment_spec_replicas != kube_deployment_status_replicas_available
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} replicas mismatch"
+            description: "Le deployment n'a pas le bon nombre de replicas disponibles"
+
+    # PVC alerts
+    - name: storage-alerts
+      rules:
+        - alert: PVCAlmostFull
+          expr: kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100 > 85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} presque plein"
+            description: "Le volume est rempli a {{ $value | printf \"%.1f\" }}%"
+
+        - alert: PVCCritical
+          expr: kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100 > 95
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} CRITIQUE"
+            description: "Le volume est rempli a {{ $value | printf \"%.1f\" }}%"
+
+    # Certificate alerts
+    - name: certificate-alerts
+      rules:
+        - alert: CertificateExpiringSoon
+          expr: (certmanager_certificate_expiration_timestamp_seconds - time()) / 86400 < 14
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Certificat {{ $labels.namespace }}/{{ $labels.name }} expire bientot"
+            description: "Le certificat expire dans {{ $value | printf \"%.0f\" }} jours"
+
+        - alert: CertificateExpiryCritical
+          expr: (certmanager_certificate_expiration_timestamp_seconds - time()) / 86400 < 3
+          for: 1h
+          labels:
+            severity: critical
+          annotations:
+            summary: "Certificat {{ $labels.namespace }}/{{ $labels.name }} EXPIRE BIENTOT"
+            description: "Le certificat expire dans {{ $value | printf \"%.0f\" }} jours!"
+
+    # Service availability alerts
+    - name: service-alerts
+      rules:
+        - alert: ServiceDown
+          expr: up == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Service {{ $labels.job }} down"
+            description: "Le service {{ $labels.job }} sur {{ $labels.instance }} est inaccessible"
+
+        - alert: PrometheusTargetMissing
+          expr: up == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Target Prometheus manquant"
+            description: "Le target {{ $labels.job }} ({{ $labels.instance }}) n'est plus scraped"
+
+    # Longhorn alerts
+    - name: longhorn-alerts
+      rules:
+        - alert: LonghornVolumeHealthCritical
+          expr: longhorn_volume_robustness == 3
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Volume Longhorn {{ $labels.volume }} en mauvaise sante"
+            description: "Le volume a perdu des replicas et est en danger"
+
+        - alert: LonghornNodeDown
+          expr: longhorn_node_status{condition="ready"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Node Longhorn {{ $labels.node }} down"
+            description: "Le node de stockage n'est plus accessible"
+
+    # Alertmanager health
+    - name: alertmanager-alerts
+      rules:
+        - alert: AlertmanagerNotificationFailing
+          expr: rate(alertmanager_notifications_failed_total[5m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Alertmanager n'arrive pas a envoyer des notifications"
+            description: "Des notifications echouent - verifier la config ntfy"
