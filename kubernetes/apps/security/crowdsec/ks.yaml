@@ -21,3 +21,4 @@ spec:
   wait: true
   dependsOn:
     - name: longhorn
+      namespace: longhorn-system
