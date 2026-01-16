@@ -43,6 +43,11 @@ spec:
             secretKeyRef:
               name: nextcloud-oidc
               key: OIDC_CLIENT_SECRET
+        - name: ONLYOFFICE_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: onlyoffice-secret
+              key: JWT_SECRET
         - name: TRUSTED_PROXIES
           value: "10.42.0.0/16"
         - name: OVERWRITEPROTOCOL
@@ -90,11 +95,27 @@ spec:
             ),
           );
 
-    # Hook to install OIDC app after Nextcloud is set up
+        onlyoffice.config.php: |-
+          <?php
+          $CONFIG = array(
+            'onlyoffice' => array(
+              'DocumentServerUrl' => 'https://office.gurzil.org/',
+              'DocumentServerInternalUrl' => 'http://onlyoffice.default.svc.cluster.local/',
+              'StorageUrl' => 'https://nextcloud.gurzil.org/',
+              'jwt_secret' => getenv('ONLYOFFICE_JWT_SECRET'),
+              'jwt_header' => 'Authorization',
+              'verify_peer_off' => false,
+            ),
+          );
+
+    # Hook to install apps after Nextcloud is set up
     hooks:
       post-installation:
         - id: install-oidc
           command: ["php", "/var/www/html/occ", "app:install", "oidc_login"]
+          runAsUser: 33
+        - id: install-onlyoffice
+          command: ["php", "/var/www/html/occ", "app:install", "onlyoffice"]
           runAsUser: 33
 
     # SQLite disabled - using PostgreSQL

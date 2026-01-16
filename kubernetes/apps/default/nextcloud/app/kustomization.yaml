@@ -9,3 +9,4 @@ resources:
   - ./postgresql.yaml
   - ./onlyoffice.yaml
   - ./coturn.yaml
+  - ./secret.sops.yaml

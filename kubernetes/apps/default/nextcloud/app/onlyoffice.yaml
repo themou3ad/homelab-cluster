@@ -1,12 +1,4 @@
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: onlyoffice-secret
-type: Opaque
-stringData:
-  JWT_SECRET: "onlyoffice-jwt-gurzil-2026"
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
