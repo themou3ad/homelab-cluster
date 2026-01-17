@@ -33,6 +33,7 @@ spec:
         cookie_expire = "30m"
         reverse_proxy = true
         skip_provider_button = true
+        insecure_oidc_allow_unverified_email = true
         upstreams = ["http://longhorn-frontend.longhorn-system.svc.cluster.local:80"]
 
     extraEnv:
