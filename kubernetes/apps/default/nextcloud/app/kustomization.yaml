@@ -10,3 +10,4 @@ resources:
   - ./onlyoffice.yaml
   - ./coturn.yaml
   - ./secret.sops.yaml
+  - ./coturn-secret.sops.yaml
