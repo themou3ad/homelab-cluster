@@ -100,7 +100,7 @@ spec:
       containers:
         # NUT server (upsd + driver) - communicates with UPS via USB
         - name: nut-server
-          image: upshift/nut-upsd:2.8.2
+          image: instantlinux/nut-upsd:2.8.1-r0
           ports:
             - name: nut
               containerPort: 3493
@@ -198,25 +198,22 @@ spec:
 
         # Prometheus exporter for NUT metrics
         - name: nut-exporter
-          image: hon95/prometheus-nut-exporter:1.3.0
+          image: ghcr.io/druggeri/nut_exporter:3.1.1
+          args:
+            - --nut.server=localhost
+            - --nut.username=exporter
+            - --web.listen-address=:9199
+            - --web.telemetry-path=/metrics
           ports:
             - name: metrics
               containerPort: 9199
               protocol: TCP
           env:
-            - name: NUT_EXPORTER_SERVER
-              value: "localhost"
-            - name: NUT_EXPORTER_SERVERPORT
-              value: "3493"
-            - name: NUT_EXPORTER_USERNAME
-              value: "exporter"
             - name: NUT_EXPORTER_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: nut-secrets
                   key: NUT_EXPORTER_PASSWORD
-            - name: HTTP_PATH
-              value: "/metrics"
           resources:
             requests:
               cpu: 5m
