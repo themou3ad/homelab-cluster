@@ -213,45 +213,125 @@ spec:
               cpu: 100m
               memory: 64Mi
 
-        # Prometheus exporter for NUT metrics
+        # Prometheus exporter for NUT metrics (simple Python exporter)
         - name: nut-exporter
-          image: hon95/prometheus-nut-exporter:1.2.1
+          image: alpine:3.20
+          command:
+            - sh
+            - -c
+            - |
+              # Install dependencies
+              apk add --no-cache python3 py3-pip nut
+              pip3 install --break-system-packages prometheus-client
+
+              # Create exporter script
+              cat > /exporter.py << 'PYEOF'
+              #!/usr/bin/env python3
+              import subprocess
+              import time
+              import sys
+              from prometheus_client import start_http_server, Gauge, Info
+
+              # Metrics
+              battery_charge = Gauge('nut_battery_charge_percent', 'Battery charge percentage', ['ups'])
+              battery_runtime = Gauge('nut_battery_runtime_seconds', 'Battery runtime in seconds', ['ups'])
+              input_voltage = Gauge('nut_input_voltage_volts', 'Input voltage', ['ups'])
+              output_voltage = Gauge('nut_output_voltage_volts', 'Output voltage', ['ups'])
+              ups_load = Gauge('nut_ups_load_percent', 'UPS load percentage', ['ups'])
+              ups_status = Gauge('nut_ups_status', 'UPS status (1=OL online, 0=OB on battery)', ['ups'])
+              input_frequency = Gauge('nut_input_frequency_hertz', 'Input frequency', ['ups'])
+
+              def get_ups_data():
+                  try:
+                      result = subprocess.run(['upsc', 'ups@localhost'], capture_output=True, text=True, timeout=10)
+                      if result.returncode != 0:
+                          print(f"upsc error: {result.stderr}", file=sys.stderr)
+                          return {}
+                      data = {}
+                      for line in result.stdout.strip().split('\n'):
+                          if ':' in line:
+                              key, value = line.split(':', 1)
+                              data[key.strip()] = value.strip()
+                      return data
+                  except Exception as e:
+                      print(f"Error getting UPS data: {e}", file=sys.stderr)
+                      return {}
+
+              def update_metrics():
+                  data = get_ups_data()
+                  if not data:
+                      return
+
+                  ups_name = 'ups'
+
+                  if 'battery.charge' in data:
+                      try:
+                          battery_charge.labels(ups=ups_name).set(float(data['battery.charge']))
+                      except: pass
+                  if 'battery.runtime' in data:
+                      try:
+                          battery_runtime.labels(ups=ups_name).set(float(data['battery.runtime']))
+                      except: pass
+                  if 'input.voltage' in data:
+                      try:
+                          input_voltage.labels(ups=ups_name).set(float(data['input.voltage']))
+                      except: pass
+                  if 'output.voltage' in data:
+                      try:
+                          output_voltage.labels(ups=ups_name).set(float(data['output.voltage']))
+                      except: pass
+                  if 'ups.load' in data:
+                      try:
+                          ups_load.labels(ups=ups_name).set(float(data['ups.load']))
+                      except: pass
+                  if 'input.frequency' in data:
+                      try:
+                          input_frequency.labels(ups=ups_name).set(float(data['input.frequency']))
+                      except: pass
+                  if 'ups.status' in data:
+                      # OL = Online (on mains), OB = On Battery
+                      status_val = 1 if 'OL' in data['ups.status'] else 0
+                      ups_status.labels(ups=ups_name).set(status_val)
+
+              if __name__ == '__main__':
+                  start_http_server(9199)
+                  print("NUT Exporter started on port 9199", flush=True)
+                  while True:
+                      update_metrics()
+                      time.sleep(15)
+              PYEOF
+
+              # Wait for NUT server to be ready
+              echo "Waiting for NUT server..."
+              while ! upsc ups@localhost > /dev/null 2>&1; do
+                echo "NUT server not ready, retrying..."
+                sleep 5
+              done
+              echo "NUT server ready, starting exporter..."
+
+              exec python3 /exporter.py
           ports:
             - name: metrics
-              containerPort: 9995
+              containerPort: 9199
               protocol: TCP
-          env:
-            - name: NUT_EXPORTER_SERVER
-              value: "127.0.0.1"
-            - name: NUT_EXPORTER_SERVERPORT
-              value: "3493"
-            - name: NUT_EXPORTER_USERNAME
-              value: "admin"
-            - name: NUT_EXPORTER_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: nut-secrets
-                  key: NUT_ADMIN_PASSWORD
-            - name: NUT_EXPORTER_LOG_LEVEL
-              value: "debug"
           resources:
             requests:
               cpu: 5m
-              memory: 16Mi
+              memory: 32Mi
             limits:
               cpu: 50m
-              memory: 32Mi
+              memory: 64Mi
           livenessProbe:
             httpGet:
               path: /metrics
               port: metrics
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /metrics
               port: metrics
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
 
       volumes:

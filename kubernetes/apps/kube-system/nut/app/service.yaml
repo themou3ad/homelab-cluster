@@ -17,6 +17,6 @@ spec:
       targetPort: nut
       protocol: TCP
     - name: metrics
-      port: 9995
+      port: 9199
       targetPort: metrics
       protocol: TCP
