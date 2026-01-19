@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nut-config
+  namespace: kube-system
+data:
+  upsmon.conf: |
+    MONITOR ups@localhost 1 admin "${NUT_ADMIN_PASSWORD}" master
+
+    MINSUPPLIES 1
+    SHUTDOWNCMD "/scripts/shutdown.sh"
+    NOTIFYCMD "/scripts/notify.sh"
+    POLLFREQ 5
+    POLLFREQALERT 2
+    HOSTSYNC 15
+    DEADTIME 25
+    POWERDOWNFLAG /etc/killpower
+    RBWARNTIME 43200
+    NOCOMMWARNTIME 300
+    FINALDELAY 5
+
+    # Execute notification script on events
+    NOTIFYFLAG ONLINE SYSLOG+EXEC
+    NOTIFYFLAG ONBATT SYSLOG+EXEC
+    NOTIFYFLAG LOWBATT SYSLOG+EXEC
+    NOTIFYFLAG FSD SYSLOG+EXEC
+    NOTIFYFLAG COMMOK SYSLOG
+    NOTIFYFLAG COMMBAD SYSLOG+EXEC
+    NOTIFYFLAG SHUTDOWN SYSLOG+EXEC
+    NOTIFYFLAG REPLBATT SYSLOG+EXEC
+    NOTIFYFLAG NOCOMM SYSLOG+EXEC
+
+    # Custom messages in French
+    NOTIFYMSG ONLINE "UPS %s: Alimentation secteur retablie"
+    NOTIFYMSG ONBATT "UPS %s: Sur batterie - coupure de courant detectee"
+    NOTIFYMSG LOWBATT "UPS %s: Batterie faible - shutdown imminent"
+    NOTIFYMSG FSD "UPS %s: Forced shutdown en cours"
+    NOTIFYMSG COMMOK "UPS %s: Communication retablie"
+    NOTIFYMSG COMMBAD "UPS %s: Communication perdue"
+    NOTIFYMSG SHUTDOWN "UPS %s: Arret systeme en cours"
+    NOTIFYMSG REPLBATT "UPS %s: Batterie a remplacer"
+    NOTIFYMSG NOCOMM "UPS %s: Communication impossible"

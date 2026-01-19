@@ -4,6 +4,7 @@ kind: Kustomization
 
 resources:
   - ./rbac.yaml
+  - ./configmap.yaml
   - ./secret.sops.yaml
   - ./daemonset.yaml
   - ./service.yaml
