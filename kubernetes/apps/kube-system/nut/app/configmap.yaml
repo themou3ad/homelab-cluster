@@ -6,7 +6,7 @@ metadata:
   namespace: kube-system
 data:
   upsmon.conf: |
-    MONITOR ups@localhost 1 admin "${NUT_ADMIN_PASSWORD}" master
+    MONITOR ups@localhost 1 admin __PASSWORD_PLACEHOLDER__ master
 
     MINSUPPLIES 1
     SHUTDOWNCMD "/scripts/shutdown.sh"

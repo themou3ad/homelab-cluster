@@ -54,8 +54,9 @@ spec:
             - -c
             - |
               # Copy and substitute password in upsmon.conf
-              sed "s/\${NUT_ADMIN_PASSWORD}/${NUT_ADMIN_PASSWORD}/g" /config-template/upsmon.conf > /nut-config/upsmon.conf
+              sed "s/__PASSWORD_PLACEHOLDER__/${NUT_ADMIN_PASSWORD}/g" /config-template/upsmon.conf > /nut-config/upsmon.conf
               chmod 640 /nut-config/upsmon.conf
+              cat /nut-config/upsmon.conf | head -5
               echo "upsmon.conf configured"
           env:
             - name: NUT_ADMIN_PASSWORD
