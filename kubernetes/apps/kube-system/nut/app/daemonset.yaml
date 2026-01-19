@@ -215,22 +215,25 @@ spec:
 
         # Prometheus exporter for NUT metrics
         - name: nut-exporter
-          image: ghcr.io/druggeri/nut_exporter:3.1.1
-          args:
-            - --nut.server=localhost
-            - --nut.username=admin
-            - --web.listen-address=:9199
-            - --log.level=debug
+          image: hon95/prometheus-nut-exporter:1.2.1
           ports:
             - name: metrics
-              containerPort: 9199
+              containerPort: 9995
               protocol: TCP
           env:
+            - name: NUT_EXPORTER_SERVER
+              value: "127.0.0.1"
+            - name: NUT_EXPORTER_SERVERPORT
+              value: "3493"
+            - name: NUT_EXPORTER_USERNAME
+              value: "admin"
             - name: NUT_EXPORTER_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: nut-secrets
                   key: NUT_ADMIN_PASSWORD
+            - name: NUT_EXPORTER_LOG_LEVEL
+              value: "debug"
           resources:
             requests:
               cpu: 5m
