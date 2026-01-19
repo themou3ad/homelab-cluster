@@ -1,24 +1,4 @@
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: crowdsec-firewall-bouncer-config
-  namespace: security
-data:
-  crowdsec-firewall-bouncer.yaml: |
-    mode: iptables
-    update_frequency: 10s
-    log_mode: stdout
-    log_level: info
-    api_url: http://crowdsec-service.security.svc.cluster.local:8080
-    api_key: __BOUNCER_API_KEY__
-    disable_ipv6: true
-    deny_action: DROP
-    deny_log: false
-    iptables_chains:
-      - INPUT
-      - FORWARD
----
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -43,7 +23,20 @@ spec:
             - sh
             - -c
             - |
-              sed "s/__BOUNCER_API_KEY__/$$BOUNCER_API_KEY/g" /config-template/crowdsec-firewall-bouncer.yaml > /config/crowdsec-firewall-bouncer.yaml
+              cat > /config/crowdsec-firewall-bouncer.yaml << EOF
+              mode: iptables
+              update_frequency: 10s
+              log_mode: stdout
+              log_level: info
+              api_url: http://crowdsec-service.security.svc.cluster.local:8080
+              api_key: $$BOUNCER_API_KEY
+              disable_ipv6: true
+              deny_action: DROP
+              deny_log: false
+              iptables_chains:
+                - INPUT
+                - FORWARD
+              EOF
               echo "Config prepared"
           env:
             - name: BOUNCER_API_KEY
@@ -52,8 +45,6 @@ spec:
                   name: crowdsec-firewall-bouncer
                   key: BOUNCER_API_KEY
           volumeMounts:
-            - name: config-template
-              mountPath: /config-template
             - name: config
               mountPath: /config
       containers:
@@ -75,9 +66,6 @@ spec:
               cpu: 100m
               memory: 64Mi
       volumes:
-        - name: config-template
-          configMap:
-            name: crowdsec-firewall-bouncer-config
         - name: config
           emptyDir: {}
       tolerations:
