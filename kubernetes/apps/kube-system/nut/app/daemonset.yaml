@@ -164,12 +164,13 @@ spec:
                   fi
               fi
 
-              curl -s \
-                  -H "Title: ${TITLE}" \
-                  -H "Priority: ${PRIORITY}" \
-                  -H "Tags: ${TAGS}" \
-                  -d "${MESSAGE}${BATTERY_INFO}" \
-                  "http://ntfy.default.svc.cluster.local/alertes" || true
+              wget --quiet \
+                  --header="Title: ${TITLE}" \
+                  --header="Priority: ${PRIORITY}" \
+                  --header="Tags: ${TAGS}" \
+                  --post-data="${MESSAGE}${BATTERY_INFO}" \
+                  -O - \
+                  "http://ntfy.default.svc.cluster.local/alertes" 2>/dev/null || true
 
               echo "$(date): Notification sent: ${NOTIFYTYPE} - ${MESSAGE}"
               EOFNOTIFY
