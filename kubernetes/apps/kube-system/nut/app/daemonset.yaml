@@ -1,0 +1,264 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nut
+  namespace: kube-system
+  labels:
+    app: nut
+    app.kubernetes.io/name: nut
+spec:
+  selector:
+    matchLabels:
+      app: nut
+  template:
+    metadata:
+      labels:
+        app: nut
+        app.kubernetes.io/name: nut
+    spec:
+      serviceAccountName: nut
+      hostNetwork: false
+      # Required for USB device access - only run on the node with UPS connected
+      nodeSelector:
+        kubernetes.io/hostname: gurzil-one
+
+      initContainers:
+        # Init container to setup configuration files with secrets substitution
+        - name: init-config
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              # Copy base configs
+              cp /config-base/* /config/
+
+              # Substitute passwords in upsd.users
+              sed -i "s/\${NUT_ADMIN_PASSWORD}/${NUT_ADMIN_PASSWORD}/g" /config/upsd.users
+              sed -i "s/\${NUT_MONITOR_PASSWORD}/${NUT_MONITOR_PASSWORD}/g" /config/upsd.users
+              sed -i "s/\${NUT_EXPORTER_PASSWORD}/${NUT_EXPORTER_PASSWORD}/g" /config/upsd.users
+
+              # Substitute password in upsmon.conf
+              sed -i "s/\${NUT_MONITOR_PASSWORD}/${NUT_MONITOR_PASSWORD}/g" /config/upsmon.conf
+
+              # Copy scripts and make executable
+              cp /config-base/shutdown.sh /scripts/shutdown.sh
+              cp /config-base/notify.sh /scripts/notify.sh
+              chmod +x /scripts/*.sh
+
+              echo "Configuration initialized"
+          env:
+            - name: NUT_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nut-secrets
+                  key: NUT_ADMIN_PASSWORD
+            - name: NUT_MONITOR_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nut-secrets
+                  key: NUT_MONITOR_PASSWORD
+            - name: NUT_EXPORTER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nut-secrets
+                  key: NUT_EXPORTER_PASSWORD
+          volumeMounts:
+            - name: config-base
+              mountPath: /config-base
+            - name: config
+              mountPath: /config
+            - name: scripts
+              mountPath: /scripts
+
+        # Download kubectl and talosctl binaries
+        - name: init-tools
+          image: alpine:3.20
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              apk add --no-cache curl
+
+              # Download kubectl
+              echo "Downloading kubectl..."
+              curl -sLo /tools/kubectl "https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl"
+              chmod +x /tools/kubectl
+
+              # Download talosctl
+              echo "Downloading talosctl..."
+              curl -sLo /tools/talosctl "https://github.com/siderolabs/talos/releases/download/v1.9.0/talosctl-linux-amd64"
+              chmod +x /tools/talosctl
+
+              echo "Tools downloaded successfully"
+          volumeMounts:
+            - name: tools
+              mountPath: /tools
+
+      containers:
+        # NUT server (upsd + driver) - communicates with UPS via USB
+        - name: nut-server
+          image: upshift/nut-upsd:2.8.2
+          ports:
+            - name: nut
+              containerPort: 3493
+              protocol: TCP
+          env:
+            - name: UPS_NAME
+              value: "ups"
+            - name: UPS_DRIVER
+              value: "usbhid-ups"
+            - name: UPS_PORT
+              value: "auto"
+            - name: API_USER
+              value: "admin"
+            - name: API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nut-secrets
+                  key: NUT_ADMIN_PASSWORD
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nut
+            - name: usb
+              mountPath: /dev/bus/usb
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          livenessProbe:
+            exec:
+              command:
+                - upsc
+                - ups@localhost
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+
+        # UPS monitor (upsmon) - monitors UPS and triggers shutdown
+        - name: upsmon
+          image: alpine:3.20
+          command:
+            - sh
+            - -c
+            - |
+              # Install NUT client and required tools
+              apk add --no-cache nut curl
+
+              # Add tools to PATH
+              export PATH="/tools:$PATH"
+
+              # Wait for upsd to be ready
+              echo "Waiting for NUT server..."
+              until upsc ups@localhost > /dev/null 2>&1; do
+                echo "NUT server not ready, waiting..."
+                sleep 5
+              done
+              echo "NUT server is ready"
+
+              # Display UPS info
+              echo "UPS detected:"
+              upsc ups@localhost
+
+              # Start upsmon in foreground
+              echo "Starting upsmon..."
+              exec upsmon -D
+          env:
+            - name: NUT_MONITOR_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nut-secrets
+                  key: NUT_MONITOR_PASSWORD
+            - name: TALOSCONFIG
+              value: "/etc/talos/talosconfig"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nut
+            - name: scripts
+              mountPath: /scripts
+            - name: tools
+              mountPath: /tools
+            - name: talosconfig
+              mountPath: /etc/talos
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+
+        # Prometheus exporter for NUT metrics
+        - name: nut-exporter
+          image: hon95/prometheus-nut-exporter:1.3.0
+          ports:
+            - name: metrics
+              containerPort: 9199
+              protocol: TCP
+          env:
+            - name: NUT_EXPORTER_SERVER
+              value: "localhost"
+            - name: NUT_EXPORTER_SERVERPORT
+              value: "3493"
+            - name: NUT_EXPORTER_USERNAME
+              value: "exporter"
+            - name: NUT_EXPORTER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nut-secrets
+                  key: NUT_EXPORTER_PASSWORD
+            - name: HTTP_PATH
+              value: "/metrics"
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+      volumes:
+        - name: config-base
+          configMap:
+            name: nut-config
+        - name: config
+          emptyDir: {}
+        - name: scripts
+          emptyDir: {}
+        - name: tools
+          emptyDir: {}
+        - name: usb
+          hostPath:
+            path: /dev/bus/usb
+            type: Directory
+        - name: talosconfig
+          secret:
+            secretName: nut-secrets
+            items:
+              - key: talosconfig
+                path: talosconfig
+
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule

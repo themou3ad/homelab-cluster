@@ -188,3 +188,69 @@ spec:
           annotations:
             summary: "Alertmanager n'arrive pas a envoyer des notifications"
             description: "Des notifications echouent - verifier la config ntfy"
+
+    # UPS alerts
+    - name: ups-alerts
+      rules:
+        - alert: UPSOnBattery
+          expr: nut_ups_status{status="OB"} == 1
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: "UPS {{ $labels.ups }}: Sur batterie - coupure de courant"
+            description: "L'onduleur est passe sur batterie. Coupure de courant detectee."
+
+        - alert: UPSBatteryLow
+          expr: nut_battery_charge_percent < 50
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "UPS {{ $labels.ups }}: Batterie faible ({{ $value | printf \"%.0f\" }}%)"
+            description: "La batterie de l'onduleur est sous 50%. Shutdown automatique imminent si coupure de courant."
+
+        - alert: UPSBatteryCritical
+          expr: nut_battery_charge_percent < 20
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: "UPS {{ $labels.ups }}: Batterie CRITIQUE ({{ $value | printf \"%.0f\" }}%)"
+            description: "La batterie est critique. Le systeme va s'eteindre automatiquement."
+
+        - alert: UPSRuntimeLow
+          expr: nut_battery_runtime_seconds < 300
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: "UPS {{ $labels.ups }}: Autonomie faible ({{ $value | printf \"%.0f\" }}s)"
+            description: "Moins de 5 minutes d'autonomie restante sur l'onduleur."
+
+        - alert: UPSOverload
+          expr: nut_output_load_percent > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "UPS {{ $labels.ups }}: Charge elevee ({{ $value | printf \"%.0f\" }}%)"
+            description: "L'onduleur est charge a plus de 80%. Risque de surcharge."
+
+        - alert: UPSOffline
+          expr: up{job="nut"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Monitoring UPS indisponible"
+            description: "Le service NUT n'est plus accessible. Impossible de surveiller l'onduleur."
+
+        - alert: UPSReplaceBattery
+          expr: nut_ups_status{status="RB"} == 1
+          for: 0m
+          labels:
+            severity: warning
+          annotations:
+            summary: "UPS {{ $labels.ups }}: Batterie a remplacer"
+            description: "L'onduleur signale que la batterie doit etre remplacee."

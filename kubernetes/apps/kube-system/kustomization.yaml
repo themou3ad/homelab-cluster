@@ -12,4 +12,5 @@ resources:
   - ./coredns/ks.yaml
   - ./local-path-provisioner/ks.yaml
   - ./metrics-server/ks.yaml
+  - ./nut/ks.yaml
   - ./reloader/ks.yaml

@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nut
+  namespace: kube-system
+  labels:
+    app: nut
+    app.kubernetes.io/name: nut
+---
+# ClusterRole for node drain operations during UPS shutdown
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: nut-node-drain
+  labels:
+    app: nut
+    app.kubernetes.io/name: nut
+rules:
+  # Required for kubectl drain
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "delete"]
+  - apiGroups: [""]
+    resources: ["pods/eviction"]
+    verbs: ["create"]
+  - apiGroups: ["apps"]
+    resources: ["daemonsets"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets", "statefulsets"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: nut-node-drain
+  labels:
+    app: nut
+    app.kubernetes.io/name: nut
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: nut-node-drain
+subjects:
+  - kind: ServiceAccount
+    name: nut
+    namespace: kube-system
