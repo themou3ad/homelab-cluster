@@ -1,4 +1,24 @@
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crowdsec-firewall-bouncer-config
+  namespace: security
+data:
+  crowdsec-firewall-bouncer.yaml: |
+    mode: iptables
+    update_frequency: 10s
+    log_mode: stdout
+    log_level: info
+    api_url: http://crowdsec-service.security.svc.cluster.local:8080
+    api_key: __BOUNCER_API_KEY__
+    disable_ipv6: true
+    deny_action: DROP
+    deny_log: false
+    iptables_chains:
+      - INPUT
+      - FORWARD
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -16,23 +36,32 @@ spec:
         app: crowdsec-firewall-bouncer
     spec:
       hostNetwork: true
-      containers:
-        - name: firewall-bouncer
-          image: ghcr.io/shgew/cs-firewall-bouncer-docker:latest
+      initContainers:
+        - name: init-config
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              sed "s/__BOUNCER_API_KEY__/$$BOUNCER_API_KEY/g" /config-template/crowdsec-firewall-bouncer.yaml > /config/crowdsec-firewall-bouncer.yaml
+              echo "Config prepared"
           env:
-            - name: CROWDSEC_LAPI_URL
-              value: "http://crowdsec-service.security.svc.cluster.local:8080"
-            - name: CROWDSEC_BOUNCER_API_KEY
+            - name: BOUNCER_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: crowdsec-firewall-bouncer
                   key: BOUNCER_API_KEY
-            - name: BACKEND
-              value: "iptables"
-            - name: DISABLE_IPV6
-              value: "true"
-            - name: UPDATE_FREQUENCY
-              value: "10s"
+          volumeMounts:
+            - name: config-template
+              mountPath: /config-template
+            - name: config
+              mountPath: /config
+      containers:
+        - name: firewall-bouncer
+          image: ghcr.io/shgew/cs-firewall-bouncer-docker:latest
+          volumeMounts:
+            - name: config
+              mountPath: /etc/crowdsec/bouncers
           securityContext:
             capabilities:
               add:
@@ -45,6 +74,12 @@ spec:
             limits:
               cpu: 100m
               memory: 64Mi
+      volumes:
+        - name: config-template
+          configMap:
+            name: crowdsec-firewall-bouncer-config
+        - name: config
+          emptyDir: {}
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
