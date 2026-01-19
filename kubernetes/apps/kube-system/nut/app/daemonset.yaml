@@ -217,16 +217,20 @@ spec:
         - name: nut-exporter
           image: ghcr.io/druggeri/nut_exporter:3.1.1
           command:
-            - /nut_exporter
-            - --nut.server=localhost
-            - --nut.username=admin
-            - --web.listen-address=:9199
+            - /bin/sh
+            - -c
+            - |
+              exec /nut_exporter \
+                --nut.server=localhost \
+                --nut.username=admin \
+                --nut.password="$NUT_PASSWORD" \
+                --web.listen-address=:9199
           ports:
             - name: metrics
               containerPort: 9199
               protocol: TCP
           env:
-            - name: NUT_EXPORTER_PASSWORD
+            - name: NUT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: nut-secrets
