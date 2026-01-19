@@ -227,10 +227,23 @@ spec:
               mountPath: /etc/talos
               readOnly: true
             - name: nut-config
-              mountPath: /etc/nut/upsmon.conf
-              subPath: upsmon.conf
+              mountPath: /nut-config-custom
           securityContext:
             privileged: true
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    sleep 5
+                    if [ -f /nut-config-custom/upsmon.conf ]; then
+                      cp /nut-config-custom/upsmon.conf /etc/nut/upsmon.conf
+                      chown nut:nut /etc/nut/upsmon.conf
+                      chmod 640 /etc/nut/upsmon.conf
+                      pkill -HUP upsmon || true
+                    fi
           resources:
             requests:
               cpu: 10m
