@@ -33,15 +33,23 @@ spec:
               set -e
               apk add --no-cache curl
 
-              echo "Downloading kubectl..."
+              # Expected checksums (SHA256)
+              KUBECTL_SHA256="7c27adc64a84d1c0cc3dcf7bf4b6e916cc00f3f576a2dbac51b318d926032437"
+              TALOSCTL_SHA256="a06ebd06488067921f0f40732fcc52b8d977e3c86c80d0502f73783c338dc25b"
+
+              echo "Downloading kubectl v1.31.0..."
               curl -sLo /tools/kubectl "https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl"
+              echo "$${KUBECTL_SHA256}  /tools/kubectl" | sha256sum -c - || { echo "ERROR: kubectl checksum verification failed!"; exit 1; }
               chmod +x /tools/kubectl
+              echo "kubectl checksum verified"
 
-              echo "Downloading talosctl..."
+              echo "Downloading talosctl v1.9.0..."
               curl -sLo /tools/talosctl "https://github.com/siderolabs/talos/releases/download/v1.9.0/talosctl-linux-amd64"
+              echo "$${TALOSCTL_SHA256}  /tools/talosctl" | sha256sum -c - || { echo "ERROR: talosctl checksum verification failed!"; exit 1; }
               chmod +x /tools/talosctl
+              echo "talosctl checksum verified"
 
-              echo "Tools downloaded successfully"
+              echo "Tools downloaded and verified successfully"
           volumeMounts:
             - name: tools
               mountPath: /tools
@@ -56,8 +64,7 @@ spec:
               # Copy and substitute password in upsmon.conf
               sed "s/__PASSWORD_PLACEHOLDER__/$${NUT_ADMIN_PASSWORD}/g" /config-template/upsmon.conf > /nut-config/upsmon.conf
               chmod 640 /nut-config/upsmon.conf
-              cat /nut-config/upsmon.conf | head -5
-              echo "upsmon.conf configured"
+              echo "upsmon.conf configured (password injected)"
           env:
             - name: NUT_ADMIN_PASSWORD
               valueFrom:
