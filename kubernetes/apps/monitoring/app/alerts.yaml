@@ -189,11 +189,11 @@ spec:
             summary: "Alertmanager n'arrive pas a envoyer des notifications"
             description: "Des notifications echouent - verifier la config ntfy"
 
-    # UPS alerts
+    # UPS alerts (nut_ups_status: 1=Online, 0=On Battery)
     - name: ups-alerts
       rules:
         - alert: UPSOnBattery
-          expr: nut_ups_status{status="OB"} == 1
+          expr: nut_ups_status == 0
           for: 0m
           labels:
             severity: critical
@@ -229,7 +229,7 @@ spec:
             description: "Moins de 5 minutes d'autonomie restante sur l'onduleur."
 
         - alert: UPSOverload
-          expr: nut_output_load_percent > 80
+          expr: nut_ups_load_percent > 80
           for: 5m
           labels:
             severity: warning
@@ -238,19 +238,10 @@ spec:
             description: "L'onduleur est charge a plus de 80%. Risque de surcharge."
 
         - alert: UPSOffline
-          expr: up{job="nut"} == 0
+          expr: absent(nut_ups_status)
           for: 2m
           labels:
             severity: critical
           annotations:
             summary: "Monitoring UPS indisponible"
             description: "Le service NUT n'est plus accessible. Impossible de surveiller l'onduleur."
-
-        - alert: UPSReplaceBattery
-          expr: nut_ups_status{status="RB"} == 1
-          for: 0m
-          labels:
-            severity: warning
-          annotations:
-            summary: "UPS {{ $labels.ups }}: Batterie a remplacer"
-            description: "L'onduleur signale que la batterie doit etre remplacee."
