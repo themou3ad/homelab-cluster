@@ -80,20 +80,20 @@ spec:
               cat > /scripts/shutdown.sh << 'EOFSH'
               #!/bin/sh
               set -e
-              export PATH="/tools:$PATH"
+              export PATH="/tools:$$PATH"
 
-              echo "$(date): UPS shutdown triggered - starting graceful shutdown sequence"
+              echo "$$(date): UPS shutdown triggered - starting graceful shutdown sequence"
 
               # Send notification
               /scripts/notify.sh "SHUTDOWN" "Arret systeme en cours - UPS batterie critique"
 
               # Get battery status for logging
-              BATTERY_CHARGE=$(upsc ups@localhost battery.charge 2>/dev/null || echo "unknown")
-              BATTERY_RUNTIME=$(upsc ups@localhost battery.runtime 2>/dev/null || echo "unknown")
-              echo "$(date): Battery charge: ${BATTERY_CHARGE}%, Runtime: ${BATTERY_RUNTIME}s"
+              BATTERY_CHARGE=$$(upsc ups@localhost battery.charge 2>/dev/null || echo "unknown")
+              BATTERY_RUNTIME=$$(upsc ups@localhost battery.runtime 2>/dev/null || echo "unknown")
+              echo "$$(date): Battery charge: $${BATTERY_CHARGE}%, Runtime: $${BATTERY_RUNTIME}s"
 
               # Drain the Kubernetes node
-              echo "$(date): Draining Kubernetes node gurzil-one..."
+              echo "$$(date): Draining Kubernetes node gurzil-one..."
               kubectl drain gurzil-one \
                   --ignore-daemonsets \
                   --delete-emptydir-data \
@@ -101,22 +101,22 @@ spec:
                   --grace-period=60 \
                   --timeout=120s 2>&1 || echo "Warning: Node drain had issues, continuing with shutdown"
 
-              echo "$(date): Node drain complete, initiating Talos shutdown..."
+              echo "$$(date): Node drain complete, initiating Talos shutdown..."
 
               # Shutdown Talos node
               talosctl shutdown \
                   --talosconfig /etc/talos/talosconfig \
                   --nodes 192.168.1.162 2>&1
 
-              echo "$(date): Shutdown command sent to Talos"
+              echo "$$(date): Shutdown command sent to Talos"
               EOFSH
 
               cat > /scripts/notify.sh << 'EOFNOTIFY'
               #!/bin/sh
-              NOTIFYTYPE="${1:-UNKNOWN}"
-              MESSAGE="${UPSNAME:-ups}: ${2:-$NOTIFYTYPE}"
+              NOTIFYTYPE="$${1:-UNKNOWN}"
+              MESSAGE="$${UPSNAME:-ups}: $${2:-$$NOTIFYTYPE}"
 
-              case "$NOTIFYTYPE" in
+              case "$$NOTIFYTYPE" in
                   ONLINE)
                       PRIORITY="default"
                       TAGS="white_check_mark,zap"
@@ -156,23 +156,23 @@ spec:
 
               BATTERY_INFO=""
               if command -v upsc >/dev/null 2>&1; then
-                  CHARGE=$(upsc ups@localhost battery.charge 2>/dev/null || echo "N/A")
-                  RUNTIME=$(upsc ups@localhost battery.runtime 2>/dev/null || echo "N/A")
-                  if [ "$CHARGE" != "N/A" ] && [ "$RUNTIME" != "N/A" ]; then
-                      RUNTIME_MIN=$((RUNTIME / 60))
-                      BATTERY_INFO=" | Batterie: ${CHARGE}% - Autonomie: ${RUNTIME_MIN}min"
+                  CHARGE=$$(upsc ups@localhost battery.charge 2>/dev/null || echo "N/A")
+                  RUNTIME=$$(upsc ups@localhost battery.runtime 2>/dev/null || echo "N/A")
+                  if [ "$$CHARGE" != "N/A" ] && [ "$$RUNTIME" != "N/A" ]; then
+                      RUNTIME_MIN=$$((RUNTIME / 60))
+                      BATTERY_INFO=" | Batterie: $${CHARGE}% - Autonomie: $${RUNTIME_MIN}min"
                   fi
               fi
 
               wget --quiet \
-                  --header="Title: ${TITLE}" \
-                  --header="Priority: ${PRIORITY}" \
-                  --header="Tags: ${TAGS}" \
-                  --post-data="${MESSAGE}${BATTERY_INFO}" \
+                  --header="Title: $${TITLE}" \
+                  --header="Priority: $${PRIORITY}" \
+                  --header="Tags: $${TAGS}" \
+                  --post-data="$${MESSAGE}$${BATTERY_INFO}" \
                   -O - \
                   "http://ntfy.default.svc.cluster.local/alertes" 2>/dev/null || true
 
-              echo "$(date): Notification sent: ${NOTIFYTYPE} - ${MESSAGE}"
+              echo "$$(date): Notification sent: $${NOTIFYTYPE} - $${MESSAGE}"
               EOFNOTIFY
 
               chmod +x /scripts/*.sh
