@@ -18,11 +18,11 @@ spec:
       hostNetwork: true
       containers:
         - name: firewall-bouncer
-          image: crowdsecurity/cs-firewall-bouncer:v0.0.31
+          image: ghcr.io/shgew/cs-firewall-bouncer-docker:latest
           env:
-            - name: API_URL
+            - name: CROWDSEC_LAPI_URL
               value: "http://crowdsec-service.security.svc.cluster.local:8080"
-            - name: API_KEY
+            - name: CROWDSEC_BOUNCER_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: crowdsec-firewall-bouncer
