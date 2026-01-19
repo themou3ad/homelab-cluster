@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: crowdsec-firewall-bouncer
+  namespace: security
+  labels:
+    app: crowdsec-firewall-bouncer
+spec:
+  selector:
+    matchLabels:
+      app: crowdsec-firewall-bouncer
+  template:
+    metadata:
+      labels:
+        app: crowdsec-firewall-bouncer
+    spec:
+      hostNetwork: true
+      containers:
+        - name: firewall-bouncer
+          image: crowdsecurity/cs-firewall-bouncer:v0.0.31
+          env:
+            - name: API_URL
+              value: "http://crowdsec-service.security.svc.cluster.local:8080"
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: crowdsec-firewall-bouncer
+                  key: BOUNCER_API_KEY
+            - name: BACKEND
+              value: "iptables"
+            - name: DISABLE_IPV6
+              value: "true"
+            - name: UPDATE_FREQUENCY
+              value: "10s"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule

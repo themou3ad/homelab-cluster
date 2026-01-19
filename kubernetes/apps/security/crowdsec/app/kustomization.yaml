@@ -7,3 +7,5 @@ resources:
   - ./helmrelease.yaml
   - ./secret.sops.yaml
   - ./notification-config.yaml
+  - ./firewall-bouncer-secret.sops.yaml
+  - ./firewall-bouncer.yaml
