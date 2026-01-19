@@ -228,26 +228,9 @@ spec:
               mountPath: /etc/talos
               readOnly: true
             - name: nut-config
-              mountPath: /nut-config-custom
+              mountPath: /etc/nut/local
           securityContext:
             privileged: true
-          lifecycle:
-            postStart:
-              exec:
-                command:
-                  - /bin/sh
-                  - -c
-                  - |
-                    sleep 8
-                    if [ -f /nut-config-custom/upsmon.conf ]; then
-                      cp /nut-config-custom/upsmon.conf /etc/nut/upsmon.conf
-                      chown nut:nut /etc/nut/upsmon.conf
-                      chmod 640 /etc/nut/upsmon.conf
-                      # Full restart needed for NOTIFYCMD to be loaded
-                      pkill -9 upsmon || true
-                      sleep 1
-                      /usr/sbin/upsmon -D &
-                    fi
           resources:
             requests:
               cpu: 10m
