@@ -79,6 +79,16 @@ spec:
           program: envoy
           poll_without_inotify: true
 
+      # Mount custom Envoy parser
+      extraVolumes:
+        - name: envoy-parser
+          configMap:
+            name: crowdsec-envoy-parser
+      extraVolumeMounts:
+        - name: envoy-parser
+          mountPath: /etc/crowdsec/parsers/s01-parse/envoy-json-logs.yaml
+          subPath: envoy-json-logs.yaml
+
       resources:
         requests:
           cpu: 100m
