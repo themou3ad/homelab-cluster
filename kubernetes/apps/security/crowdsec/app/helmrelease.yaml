@@ -16,6 +16,39 @@ spec:
   values:
     container_runtime: containerd
 
+    # Custom parsers for Envoy logs
+    config:
+      parsers:
+        s01-parse:
+          envoy-json-logs.yaml: |
+            onsuccess: next_stage
+            filter: "evt.Parsed.program == 'envoy'"
+            name: gurzil/envoy-json-logs
+            description: "Parse Envoy Gateway JSON access logs"
+            nodes:
+              - filter: "evt.Line.Raw contains 'x-forwarded-for' && evt.Line.Raw contains 'response_code'"
+                statics:
+                  - meta: log_type
+                    value: http_access-log
+                  - meta: service
+                    value: envoy-gateway
+                  - target: evt.StrTime
+                    expression: "JsonExtract(evt.Line.Raw, 'start_time')"
+                  - meta: source_ip
+                    expression: "Trim(Split(JsonExtract(evt.Line.Raw, 'x-forwarded-for'), ',')[0], ' ')"
+                  - parsed: source_ip
+                    expression: "Trim(Split(JsonExtract(evt.Line.Raw, 'x-forwarded-for'), ',')[0], ' ')"
+                  - parsed: http_verb
+                    expression: "JsonExtract(evt.Line.Raw, 'method')"
+                  - parsed: http_path
+                    expression: "JsonExtract(evt.Line.Raw, 'x-envoy-origin-path')"
+                  - parsed: http_status
+                    expression: "JsonExtract(evt.Line.Raw, 'response_code')"
+                  - parsed: http_user_agent
+                    expression: "JsonExtract(evt.Line.Raw, 'user-agent')"
+                  - parsed: target_fqdn
+                    expression: "JsonExtract(evt.Line.Raw, ':authority')"
+
     # LAPI (Local API) - central component
     lapi:
       replicas: 1
@@ -78,16 +111,6 @@ spec:
           podName: envoy-*
           program: envoy
           poll_without_inotify: true
-
-      # Mount custom Envoy parser
-      extraVolumes:
-        - name: envoy-parser
-          configMap:
-            name: crowdsec-envoy-parser
-      extraVolumeMounts:
-        - name: envoy-parser
-          mountPath: /etc/crowdsec/parsers/s01-parse/envoy-json-logs.yaml
-          subPath: envoy-json-logs.yaml
 
       resources:
         requests:
