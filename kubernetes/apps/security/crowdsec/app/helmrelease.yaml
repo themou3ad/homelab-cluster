@@ -26,28 +26,32 @@ spec:
             name: gurzil/envoy-json-logs
             description: "Parse Envoy Gateway JSON access logs"
             nodes:
-              - filter: "evt.Line.Raw contains 'x-forwarded-for' && evt.Line.Raw contains 'response_code'"
+              - filter: "evt.Parsed.message contains 'x-forwarded-for' && evt.Parsed.message contains 'response_code'"
                 statics:
                   - meta: log_type
                     value: http_access-log
                   - meta: service
-                    value: envoy-gateway
+                    value: http
                   - target: evt.StrTime
-                    expression: "JsonExtract(evt.Line.Raw, 'start_time')"
+                    expression: "JsonExtract(evt.Parsed.message, 'start_time')"
                   - meta: source_ip
-                    expression: "Trim(Split(JsonExtract(evt.Line.Raw, 'x-forwarded-for'), ',')[0], ' ')"
+                    expression: "Trim(Split(JsonExtract(evt.Parsed.message, 'x-forwarded-for'), ',')[0], ' ')"
                   - parsed: source_ip
-                    expression: "Trim(Split(JsonExtract(evt.Line.Raw, 'x-forwarded-for'), ',')[0], ' ')"
+                    expression: "Trim(Split(JsonExtract(evt.Parsed.message, 'x-forwarded-for'), ',')[0], ' ')"
                   - parsed: http_verb
-                    expression: "JsonExtract(evt.Line.Raw, 'method')"
+                    expression: "JsonExtract(evt.Parsed.message, 'method')"
+                  - parsed: request
+                    expression: "JsonExtract(evt.Parsed.message, 'x-envoy-origin-path')"
                   - parsed: http_path
-                    expression: "JsonExtract(evt.Line.Raw, 'x-envoy-origin-path')"
+                    expression: "JsonExtract(evt.Parsed.message, 'x-envoy-origin-path')"
+                  - meta: http_status
+                    expression: "JsonExtract(evt.Parsed.message, 'response_code')"
                   - parsed: http_status
-                    expression: "JsonExtract(evt.Line.Raw, 'response_code')"
+                    expression: "JsonExtract(evt.Parsed.message, 'response_code')"
                   - parsed: http_user_agent
-                    expression: "JsonExtract(evt.Line.Raw, 'user-agent')"
+                    expression: "JsonExtract(evt.Parsed.message, 'user-agent')"
                   - parsed: target_fqdn
-                    expression: "JsonExtract(evt.Line.Raw, ':authority')"
+                    expression: "JsonExtract(evt.Parsed.message, ':authority')"
 
     # LAPI (Local API) - central component
     lapi:
