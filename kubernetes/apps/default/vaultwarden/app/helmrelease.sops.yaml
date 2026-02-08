@@ -37,8 +37,6 @@ spec:
           value: "false"
         - key: SSO_SCOPES
           value: openid email profile offline_access
-        - key: SIGNUPS_VERIFY
-          value: "false"
     # Signups disabled - only via SSO
     signupsAllowed: "false"
     # Data persistence on Longhorn
